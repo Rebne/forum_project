@@ -1,5 +1,3 @@
-![ERD schema](ERD.png)
-
 ### General
 - [ ] Only allowed packages are used.
 - [ ] Server uses correct HTTP methods (GET, POST, PUT, etc.).
@@ -57,3 +55,6 @@
 - [ ] Docker image can be built successfully using Dockerfile.
 - [ ] Container runs successfully using created image.
 - [ ] Project has no unused Docker objects.
+
+<img src="ERD.png" align="center" width="80%" height="80%">
+
