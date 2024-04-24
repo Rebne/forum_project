@@ -1,3 +1,5 @@
+![ERD schema](ERD.png)
+
 ### General
 - [ ] Only allowed packages are used.
 - [ ] Server uses correct HTTP methods (GET, POST, PUT, etc.).
