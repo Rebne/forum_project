@@ -222,7 +222,7 @@ func initializeSQLiteTables(db *sql.DB) {
 		users_id INTEGER NOT NULL,
 		comments_id INTEGER NOT NULL,
         posts_id INTEGER NOT NULL,
-		is_dislike INTEGER NOT NULL
+		is_dislike INTEGER NOT NULL,
 		FOREIGN KEY (users_id) REFERENCES users (id),
 		FOREIGN KEY (posts_id) REFERENCES posts (id),
 		FOREIGN KEY (comments_id) REFERENCES comments (id)
@@ -236,7 +236,7 @@ func initializeSQLiteTables(db *sql.DB) {
         id INTEGER PRIMARY KEY,
 		users_id INTEGER NOT NULL,
 		comments_id INTEGER NOT NULL,
-		is_dislike INTEGER NOT NULL
+		is_dislike INTEGER NOT NULL,
 		FOREIGN KEY (users_id) REFERENCES users (id),
 		FOREIGN KEY (comments_id) REFERENCES comments (id)
     );`)
