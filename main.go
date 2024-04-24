@@ -12,6 +12,11 @@ import (
 	"strings"
 
 	"literary-lions/internal/cookies"
+
+	"database/sql"
+
+	// underscore is used when no package's exported identifiers (functions, types, variables) are used in your code.
+	_ "github.com/mattn/go-sqlite3"
 )
 
 var secret []byte
@@ -21,15 +26,94 @@ type User struct {
 	Password string
 }
 
-func main() {
-	gob.Register(&User{})
+var tmpl *template.Template
+
+func init() {
 
 	var err error
-
-	secret, err = hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
+	tmpl, err = template.ParseFiles("static/index.html")
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	db, err := sql.Open("sqlite3", "./forum.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Foreign keys needs to enabled in SQLite
+	var isForeignKeysEnabled int
+	err = db.QueryRow("PRAGMA foreign_keys;").Scan(&isForeignKeysEnabled)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	if isForeignKeysEnabled != 1 {
+		_, err = db.Exec("PRAGMA foreign_keys = ON;")
+		if err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	// Initializing table for users if it doesn't exist yet
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
+        id INTEGER PRIMARY KEY,
+        username TEXT NOT NULL UNIQUE,
+        password TEXT NOT NULL,
+		date_created TIMESTAMP NOT NULL
+    );`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Initializing table for posts if it doesn't exist yet
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS posts (
+        id INTEGER PRIMARY KEY,
+		users_id INTEGER,
+        content TEXT NOT NULL,
+        category TEXT NOT NULL,
+		liked INTEGER,
+		disliked INTEGER,
+		date TIMESTAMP NOT NULL,
+		FOREIGN KEY (users_id) REFERENCES users (id)
+    );`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	// Initializing table for comments if it doesn't exist yet
+	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS comments (
+        id INTEGER PRIMARY KEY,
+        posts_id INTEGER NOT NULL,
+		content TEXT NOT NULL,
+		liked INTEGER,
+		disliked INTEGER,
+		date TIMESTAMP NOT NULL,
+		users_id INTEGER NOT NULL,
+		FOREIGN KEY (users_id) REFERENCES users (id),
+		FOREIGN KEY (posts_id) REFERENCES posts (id)
+    );`)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	defer db.Close()
+}
+
+func main() {
+
+	for _, driver := range sql.Drivers() {
+		fmt.Println(driver)
+	}
+
+	gob.Register(&User{})
+
+	secret, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	fmt.Println(secret)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/set", setCookieHandler)
@@ -116,17 +200,6 @@ func getCookieHandler(w http.ResponseWriter, r *http.Request) {
 	// Print the user information in the response.
 	fmt.Fprintf(w, "Name: %q\n", user.Name)
 	fmt.Fprintf(w, "Password: %q\n", user.Password)
-}
-
-var tmpl *template.Template
-
-func init() {
-
-	var err error
-	tmpl, err = template.ParseFiles("static/index.html")
-	if err != nil {
-		log.Fatal(err)
-	}
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
