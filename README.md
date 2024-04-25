@@ -56,5 +56,5 @@
 - [ ] Container runs successfully using created image.
 - [ ] Project has no unused Docker objects.
 
-<img src="ERD.png" width="80%" height="80%">
+<img src="ERD.png" align="center" width="80%" height="80%">
 
