@@ -18,6 +18,7 @@ import (
 
 	// underscore is used when no package's exported identifiers (functions, types, variables) are used in your code.
 	_ "github.com/mattn/go-sqlite3"
+	// "golang.org/x/crypto/bcrypt"
 )
 
 var secret []byte
@@ -73,9 +74,13 @@ func main() {
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-	// TODO: Handling case where username or password field is empty
+	//TODO: Handling case where username or password field is empty
+
+	//TODO: Register page needs a email field
+	//TODO: Users table need update with column: email
+
 	if r.Method == http.MethodGet {
-		renderTemplate(w, "Register", "")
+		renderTemplate(w, "register", "")
 
 	} else if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -84,6 +89,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		email := r.Form.Get("email")
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
 
@@ -93,66 +99,57 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer stmtForCheck.Close()
 
-		var user string
-		err = stmtForCheck.QueryRow(username).Scan(&user)
-
-		// TODO: Have to differentiate errorMessages and usual Messages
-
-		if user != "" {
-			renderTemplate(w, "Register", "Username is already taken")
-			return
+		var userExists string
+		var emailExists string
+		err = stmtForCheck.QueryRow(username).Scan(&userExists)
+		if err != nil && err != sql.ErrNoRows {
+			log.Fatal(err)
 		}
-
+		err = stmtForCheck.QueryRow(password).Scan(&emailExists)
 		if err != nil && err != sql.ErrNoRows {
 			log.Fatal(err)
 		}
 
-		stmtForAddUser, err := db.Prepare("INSERT INTO users (username, password, date_created) VALUES (?,?,?);")
-		if err != nil {
-			log.Fatal(err)
+		// TODO: Have to differentiate errorMessages and usual Messages
+
+		if userExists != "" || emailExists != "" {
+			renderTemplate(w, "register", "Username or email is already taken")
+			return
 		}
-		defer stmtForAddUser.Close()
-		timestamp := time.Now().Format(time.DateTime)
-		_, err = stmtForAddUser.Exec(username, password, timestamp)
+
+		stmtForAddUser, err := db.Prepare("INSERT INTO users (username, password, email, date_created) VALUES (?,?,?,?);")
 		if err != nil {
 			log.Fatal(err)
 		}
 
-		renderTemplate(w, "Login", fmt.Sprintf("New user %s created", strings.ToUpper(username)))
+		defer stmtForAddUser.Close()
+		timestamp := time.Now().Format(time.DateTime)
+		_, err = stmtForAddUser.Exec(username, password, email, timestamp)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		renderTemplate(w, "login", fmt.Sprintf("New user %s created", strings.ToUpper(username)))
 		return
 
 	}
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "Login", "")
+	renderTemplate(w, "login", "")
 }
 
-type LoginPage struct {
-	Title          string
-	Action         string
-	ReverseAction  string
-	ReverseMessage string
-	Message        string
+type Message struct {
+	Message string
 }
 
 func renderTemplate(w http.ResponseWriter, title, message string) {
-	action := "/" + strings.ToLower(title)
 
-	data := LoginPage{
-		Title:   title,
-		Action:  action,
+	data := Message{
 		Message: message,
 	}
-	if title == "Login" {
-		data.ReverseAction = "/register"
-		data.ReverseMessage = "Register"
-	} else {
-		data.ReverseAction = "/login"
-		data.ReverseMessage = "Already have an account?"
-	}
 
-	tmpl := template.Must(template.ParseFiles("static/login.html"))
+	tmpl := template.Must(template.ParseFiles(fmt.Sprintf("static/%s.html", title)))
 	err := tmpl.Execute(w, data)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
@@ -270,6 +267,7 @@ func initializeSQLiteTables(db *sql.DB) {
         id INTEGER PRIMARY KEY,
         username TEXT NOT NULL UNIQUE,
         password TEXT NOT NULL,
+		email TEXT NOT NULL UNIQUE,
 		date_created TIMESTAMP NOT NULL
     );`)
 	if err != nil {

@@ -1,3 +1,4 @@
+<!-- //FIXME: Thinking how to solve this with mixing templates  -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -7,16 +8,16 @@
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <h1>Login</h1>
-    <form action="/login" method="POST">
-        <label for="username">Username or email:</label><br>
+    <h1>{{.Title}}</h1>
+    <form action="{{.Action}}" method="POST">
+        <label for="username">Username:</label><br>
         <input type="text" id="username" name="username"><br>
         <label for="password">Password:</label><br>
         <input type="password" id="password" name="password"><br><br>
         <input type="submit" value="Submit">
     </form>
     <div style="padding: 8px;"></div>
-    <a href="/register" method="POST">Register</a>
+    <a href="{{.ReverseAction}}" method="POST">{{.ReverseMessage}}</a>
     <div style="padding: 8px;"></div>
     <p>{{.Message}}</p>
 
