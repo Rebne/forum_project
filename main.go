@@ -10,6 +10,7 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"time"
 
 	"literary-lions/internal/cookies"
 
@@ -27,6 +28,7 @@ type User struct {
 }
 
 var tmpl *template.Template
+var db *sql.DB
 
 func init() {
 
@@ -36,21 +38,16 @@ func init() {
 		log.Fatal(err)
 	}
 
-	db, err := sql.Open("sqlite3", "./forum.db")
+	db, err = sql.Open("sqlite3", "./forum.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	initializeSQLiteTables(db)
 
-	defer db.Close()
 }
 
 func main() {
-
-	for _, driver := range sql.Drivers() {
-		fmt.Println(driver)
-	}
 
 	gob.Register(&User{})
 
@@ -65,11 +62,101 @@ func main() {
 	mux.HandleFunc("/set", setCookieHandler)
 	mux.HandleFunc("/get", getCookieHandler)
 	mux.HandleFunc("/", indexHandler)
+	mux.HandleFunc("/login", loginHandler)
+	mux.HandleFunc("/register", registerHandler)
 
 	log.Print("Listening...")
 	err = http.ListenAndServe(":3000", mux)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func registerHandler(w http.ResponseWriter, r *http.Request) {
+	// TODO: Handling case where username or password field is empty
+	if r.Method == http.MethodGet {
+		renderTemplate(w, "Register", "")
+
+	} else if r.Method == http.MethodPost {
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Failed to parse form", http.StatusInternalServerError)
+			return
+		}
+
+		username := r.Form.Get("username")
+		password := r.Form.Get("password")
+
+		stmtForCheck, err := db.Prepare("SELECT username FROM users WHERE username = ?;")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer stmtForCheck.Close()
+
+		var user string
+		err = stmtForCheck.QueryRow(username).Scan(&user)
+
+		// TODO: Have to differentiate errorMessages and usual Messages
+
+		if user != "" {
+			renderTemplate(w, "Register", "Username is already taken")
+			return
+		}
+
+		if err != nil && err != sql.ErrNoRows {
+			log.Fatal(err)
+		}
+
+		stmtForAddUser, err := db.Prepare("INSERT INTO users (username, password, date_created) VALUES (?,?,?);")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer stmtForAddUser.Close()
+		timestamp := time.Now().Format(time.DateTime)
+		_, err = stmtForAddUser.Exec(username, password, timestamp)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		renderTemplate(w, "Login", fmt.Sprintf("New user %s created", strings.ToUpper(username)))
+		return
+
+	}
+}
+
+func loginHandler(w http.ResponseWriter, r *http.Request) {
+	renderTemplate(w, "Login", "")
+}
+
+type LoginPage struct {
+	Title          string
+	Action         string
+	ReverseAction  string
+	ReverseMessage string
+	Message        string
+}
+
+func renderTemplate(w http.ResponseWriter, title, message string) {
+	action := "/" + strings.ToLower(title)
+
+	data := LoginPage{
+		Title:   title,
+		Action:  action,
+		Message: message,
+	}
+	if title == "Login" {
+		data.ReverseAction = "/register"
+		data.ReverseMessage = "Register"
+	} else {
+		data.ReverseAction = "/login"
+		data.ReverseMessage = "Already have an account?"
+	}
+
+	tmpl := template.Must(template.ParseFiles("static/login.html"))
+	err := tmpl.Execute(w, data)
+	if err != nil {
+		http.Error(w, "Internal server error", http.StatusInternalServerError)
+		return
 	}
 }
 
