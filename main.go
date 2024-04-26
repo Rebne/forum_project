@@ -80,7 +80,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Failed to parse form", http.StatusInternalServerError)
+			http.Error(w, "Failed to parse register form", http.StatusInternalServerError)
 			return
 		}
 
@@ -138,11 +138,72 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		renderTemplate(w, "login", fmt.Sprintf("New user %s created", strings.ToUpper(username)))
 		return
 
+	} else {
+		err := errors.New("incorrect HTTP request received")
+		log.Fatal(err)
 	}
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
-	renderTemplate(w, "login", "")
+	if r.Method == http.MethodGet {
+		renderTemplate(w, "login", "")
+	} else if r.Method == http.MethodPost {
+		err := r.ParseForm()
+		if err != nil {
+			http.Error(w, "Failed to parse login form", http.StatusInternalServerError)
+			return
+		}
+		usernameOrEmail := r.Form.Get("username")
+		passwordFromForm := r.Form.Get("password")
+
+		if usernameOrEmail == "" && passwordFromForm == "" {
+			renderTemplate(w, "login", "You have to enter a username and password")
+			return
+		}
+
+		if usernameOrEmail == "" {
+			renderTemplate(w, "login", "Username field was empty")
+			return
+		}
+		if passwordFromForm == "" {
+			renderTemplate(w, "login", "Password field was empty")
+			return
+		}
+
+		stmtForCheck, err := db.Prepare("SELECT username, password FROM users WHERE username = ? OR email = ?;")
+		if err != nil {
+			log.Fatal(err)
+		}
+		defer stmtForCheck.Close()
+
+		var username string
+		var password []byte
+
+		err = stmtForCheck.QueryRow(usernameOrEmail, usernameOrEmail).Scan(&username, &password)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				renderTemplate(w, "login", "User does not exist")
+				return
+			} else {
+				log.Fatal(err)
+			}
+		}
+
+		err = bcrypt.CompareHashAndPassword(password, []byte(passwordFromForm))
+		// if error nil then correct password
+		if err != nil {
+			fmt.Println(err.Error())
+			renderTemplate(w, "login", "Wrong password entered")
+			return
+		}
+
+		renderTemplate(w, "login", "Login was successful")
+		return
+
+	} else {
+		err := errors.New("incorrect HTTP request received")
+		log.Fatal(err)
+	}
 }
 
 type Message struct {

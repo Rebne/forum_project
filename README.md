@@ -25,6 +25,7 @@
 - [ ] Posts stored in the database.
 - [ ] Comments stored in the database.
 - [ ] SQL queries effective and efficient. [Extra]
+- [ ] Update README with new ERD image
 
 ### Registration and login
 - [x] Registration requires email, username, and password.
@@ -32,7 +33,7 @@
 - [ ] Registered users can log in and access features.
 - [x] Duplicate email or username detected during registration.
 - [x] Users can register successfully.
-- [ ] Forum displays warning message for invalid login attempts.
+- [x] Forum displays warning message for invalid login attempts.
 - [ ] User-friendly and secure registration process. [Extra]
 - [x] Passwords secured and encrypted using bcrypt or other strong algorithms. [Extra]
 
