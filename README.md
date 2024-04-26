@@ -28,13 +28,13 @@
 
 ### Registration and login
 - [x] Registration requires email, username, and password.
-- [ ] Incorrect email or password detected during login.
+- [x] Incorrect email or password detected during login.
 - [ ] Registered users can log in and access features.
 - [x] Duplicate email or username detected during registration.
 - [x] Users can register successfully.
 - [ ] Forum displays warning message for invalid login attempts.
 - [ ] User-friendly and secure registration process. [Extra]
-- [ ] Passwords secured and encrypted using bcrypt or other strong algorithms. [Extra]
+- [x] Passwords secured and encrypted using bcrypt or other strong algorithms. [Extra]
 
 ### User Interaction
 - [ ] Only registered users can create posts and comments.

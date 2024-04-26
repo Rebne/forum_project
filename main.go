@@ -9,6 +9,7 @@ import (
 	"html/template"
 	"log"
 	"net/http"
+	"regexp"
 	"strings"
 	"time"
 
@@ -87,8 +88,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
 
-		if email == "" || username == "" || password == "" {
-			renderTemplate(w, "register", "Please fill in all the fields to register successfully")
+		err = checkForValidInput(w, email, username, password)
+		if err != nil {
 			return
 		}
 
@@ -160,6 +161,33 @@ func renderTemplate(w http.ResponseWriter, title, message string) {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
 	}
+}
+
+// FIXME: Could show all the errors at once with {{range}}
+func checkForValidInput(w http.ResponseWriter, username, password, email string) error {
+	if len(password) < 8 {
+		renderTemplate(w, "register", "Password has to be at least 8 characters")
+		return errors.New("")
+	}
+
+	if !isValidEmail(email) {
+		renderTemplate(w, "register", "Please enter a correct email")
+		return errors.New("")
+	}
+
+	if email == "" || username == "" || password == "" {
+		renderTemplate(w, "register", "Please fill in all the fields to register successfully")
+		return errors.New("")
+	}
+	return nil
+}
+
+func isValidEmail(email string) bool {
+	pattern := `^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`
+
+	regex := regexp.MustCompile(pattern)
+
+	return regex.MatchString(email)
 }
 
 func setCookieHandler(w http.ResponseWriter, r *http.Request) {
