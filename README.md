@@ -22,7 +22,7 @@
 - [x] Code uses at least one CREATE query.
 - [x] Code uses at least one INSERT query.
 - [x] User registration data stored in the database.
-- [ ] Posts stored in the database.
+- [x] Posts stored in the database.
 - [ ] Comments stored in the database.
 - [ ] SQL queries effective and efficient. [Extra]
 - [ ] Update README with new ERD image
