@@ -18,7 +18,7 @@ import (
 
 	// underscore is used when no package's exported identifiers (functions, types, variables) are used in your code.
 	_ "github.com/mattn/go-sqlite3"
-	// "golang.org/x/crypto/bcrypt"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var secret []byte
@@ -52,12 +52,10 @@ func main() {
 
 	gob.Register(&User{})
 
-	secret, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
+	_, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	fmt.Println(secret)
 
 	mux := http.NewServeMux()
 	mux.HandleFunc("/set", setCookieHandler)
@@ -74,10 +72,6 @@ func main() {
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
-	//TODO: Handling case where username or password field is empty
-
-	//TODO: Register page needs a email field
-	//TODO: Users table need update with column: email
 
 	if r.Method == http.MethodGet {
 		renderTemplate(w, "register", "")
@@ -92,6 +86,11 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		email := r.Form.Get("email")
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
+
+		if email == "" || username == "" || password == "" {
+			renderTemplate(w, "register", "Please fill in all the fields to register successfully")
+			return
+		}
 
 		stmtForCheck, err := db.Prepare("SELECT username FROM users WHERE username = ?;")
 		if err != nil {
@@ -117,14 +116,20 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		stmtForAddUser, err := db.Prepare("INSERT INTO users (username, password, email, date_created) VALUES (?,?,?,?);")
+		// Password encrypted for security
+		blob, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		stmtForAddUser, err := db.Prepare("INSERT INTO users (username, email, date_created, password) VALUES (?,?,?,?);")
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		defer stmtForAddUser.Close()
 		timestamp := time.Now().Format(time.DateTime)
-		_, err = stmtForAddUser.Exec(username, password, email, timestamp)
+		_, err = stmtForAddUser.Exec(username, email, timestamp, blob)
 		if err != nil {
 			log.Fatal(err)
 		}
@@ -266,9 +271,9 @@ func initializeSQLiteTables(db *sql.DB) {
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY,
         username TEXT NOT NULL UNIQUE,
-        password TEXT NOT NULL,
 		email TEXT NOT NULL UNIQUE,
-		date_created TIMESTAMP NOT NULL
+		date_created TIMESTAMP NOT NULL,
+        password BLOB NOT NULL
     );`)
 	if err != nil {
 		log.Fatal(err)
