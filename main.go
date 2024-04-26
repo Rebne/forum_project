@@ -72,6 +72,64 @@ func main() {
 	}
 }
 
+type PageContent struct {
+	Posts []Post
+}
+
+type Post struct {
+	User_id  int
+	Title    string
+	Content  string
+	Category string
+	Date     string
+	Username string
+}
+
+func indexHandler(w http.ResponseWriter, r *http.Request) {
+
+	//FIXME: Move to new function
+
+	// Pulling posts from DB
+	rows, err := db.Query("SELECT * FROM posts;")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	Posts := []Post{}
+	var user_id int
+	var id int
+	var date string
+	for rows.Next() {
+		tmp := Post{}
+		err = rows.Scan(&id, &user_id, &tmp.Title, &tmp.Content, &tmp.Category, &date)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		//TODO: Reformat date
+
+		db.QueryRow("SELECT username FROM users WHERE id = ?;", user_id).Scan(&tmp.Username)
+		tmp.Date = date[:len(date)-10]
+		Posts = append(Posts, tmp)
+
+		// fmt.Printf("%d, %s, %s, %s, %s, %s\n", id, tmp.Username, tmp.Title, tmp.Content, tmp.Category, tmp.Date)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	content := PageContent{Posts: Posts}
+
+	err = tmpl.Execute(w, content)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
@@ -326,19 +384,6 @@ func getCookieHandler(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "Password: %q\n", user.Password)
 }
 
-func indexHandler(w http.ResponseWriter, r *http.Request) {
-
-	data := struct {
-	}{}
-
-	err := tmpl.Execute(w, data)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
-}
-
 func initializeSQLiteTables(db *sql.DB) {
 	var err error
 
@@ -372,6 +417,7 @@ func initializeSQLiteTables(db *sql.DB) {
 	_, err = db.Exec(`CREATE TABLE IF NOT EXISTS posts (
         id INTEGER PRIMARY KEY,
 		users_id INTEGER,
+		title TEXT NOT NULL UNIQUE,
         content TEXT NOT NULL,
         category TEXT NOT NULL,
 		date TIMESTAMP NOT NULL,
