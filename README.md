@@ -27,11 +27,11 @@
 - [ ] SQL queries effective and efficient. [Extra]
 
 ### Registration and login
-- [ ] Registration requires email, username, and password.
+- [x] Registration requires email, username, and password.
 - [ ] Incorrect email or password detected during login.
 - [ ] Registered users can log in and access features.
-- [ ] Duplicate email or username detected during registration.
-- [ ] Users can register successfully.
+- [x] Duplicate email or username detected during registration.
+- [x] Users can register successfully.
 - [ ] Forum displays warning message for invalid login attempts.
 - [ ] User-friendly and secure registration process. [Extra]
 - [ ] Passwords secured and encrypted using bcrypt or other strong algorithms. [Extra]
@@ -56,5 +56,5 @@
 - [ ] Container runs successfully using created image.
 - [ ] Project has no unused Docker objects.
 
-<img src="ERD.png" align="center" width="80%" height="80%">
+<img src="ERD.png" width="80%" height="80%">
 
