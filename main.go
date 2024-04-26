@@ -88,7 +88,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
 
-		err = checkForValidInput(w, email, username, password)
+		err = checkForValidInput(w, username, password, email)
 		if err != nil {
 			return
 		}
