@@ -59,6 +59,7 @@ func main() {
 	}
 
 	mux := http.NewServeMux()
+	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 	mux.HandleFunc("/set", setCookieHandler)
 	mux.HandleFunc("/get", getCookieHandler)
 	mux.HandleFunc("/", indexHandler)
