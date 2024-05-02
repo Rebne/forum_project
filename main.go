@@ -65,11 +65,58 @@ func main() {
 	mux.HandleFunc("/", indexHandler)
 	mux.HandleFunc("/login", loginHandler)
 	mux.HandleFunc("/register", registerHandler)
+	mux.HandleFunc("/search", searchHandler)
 
 	log.Print("Listening...")
 	err = http.ListenAndServe(":3000", mux)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func searchHandler(w http.ResponseWriter, r *http.Request) {
+
+	r.ParseForm()
+
+	searchInput := r.Form.Get("search")
+	rows, err := db.Query("SELECT * FROM posts WHERE title LIKE '%' || ? || '%' OR content LIKE '%' || ? || '%';", searchInput, searchInput)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	Posts := []Post{}
+	var user_id int
+	var id int
+	var date string
+	for rows.Next() {
+		tmp := Post{}
+		err = rows.Scan(&id, &user_id, &tmp.Title, &tmp.Content, &tmp.Category, &date)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		//TODO: Reformat date
+
+		db.QueryRow("SELECT username FROM users WHERE id = ?;", user_id).Scan(&tmp.Username)
+		tmp.Date = date[:len(date)-10]
+		Posts = append(Posts, tmp)
+
+		// fmt.Printf("%d, %s, %s, %s, %s, %s\n", id, tmp.Username, tmp.Title, tmp.Content, tmp.Category, tmp.Date)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	content := PageContent{Posts: Posts}
+
+	err = tmpl.Execute(w, content)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -88,7 +135,7 @@ type Post struct {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 
-	//FIXME: Move to new function
+	//FIXME: Move to new function also for search
 
 	// Pulling posts from DB
 	rows, err := db.Query("SELECT * FROM posts;")
@@ -283,7 +330,6 @@ func renderTemplate(w http.ResponseWriter, title, message string) {
 	}
 }
 
-// FIXME: Could show all the errors at once with {{range}}
 func checkForValidInput(w http.ResponseWriter, username, password, email string) error {
 	if len(password) < 8 {
 		renderTemplate(w, "register", "Password has to be at least 8 characters")
