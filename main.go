@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"crypto/rand"
+	"encoding/base64"
 	"encoding/gob"
 	"encoding/hex"
 	"errors"
@@ -24,6 +27,13 @@ type User struct {
 	Password string
 }
 
+type Session struct {
+	UserID   int
+	Username string
+}
+
+var sessions map[string]Session
+
 var tmpl *template.Template
 var db *sql.DB
 
@@ -45,6 +55,7 @@ func init() {
 }
 
 func main() {
+	sessions = make(map[string]Session)
 
 	gob.Register(&User{})
 
@@ -60,11 +71,33 @@ func main() {
 	mux.HandleFunc("/register", registerHandler)
 	mux.HandleFunc("/search", searchHandler)
 
+	// Protected routes
+	protectedMux := http.NewServeMux()
+	protectedMux.HandleFunc("/protected", protectedHandler)
+
+	// Wrap the protectedMux with session middleware
+	http.Handle("/protected", sessionMiddleware(protectedMux))
+
+	// Use the standard mux for other routes
+	http.Handle("/", mux)
+
 	log.Print("Listening...")
-	err = http.ListenAndServe(":3000", mux)
+	err = http.ListenAndServe(":3000", nil)
 	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+func protectedHandler(w http.ResponseWriter, r *http.Request) {
+	// Retrieve session data from request context
+	session := r.Context().Value("session").(Session)
+
+	// You can now use session data as needed
+	username := session.Username
+	userID := session.UserID
+
+	// Example response
+	fmt.Fprintf(w, "Protected route accessed by user: %s (ID: %d)", username, userID)
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -269,16 +302,17 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		stmtForCheck, err := db.Prepare("SELECT username, password FROM users WHERE username = ? OR email = ?;")
+		stmtForCheck, err := db.Prepare("SELECT id, username, password FROM users WHERE username = ? OR email = ?;")
 		if err != nil {
 			log.Fatal(err)
 		}
 		defer stmtForCheck.Close()
 
+		var userID int
 		var username string
 		var password []byte
 
-		err = stmtForCheck.QueryRow(usernameOrEmail, usernameOrEmail).Scan(&username, &password)
+		err = stmtForCheck.QueryRow(usernameOrEmail, usernameOrEmail).Scan(&userID, &username, &password)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				renderTemplate(w, "login", "User does not exist")
@@ -289,20 +323,58 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		err = bcrypt.CompareHashAndPassword(password, []byte(passwordFromForm))
-		// if error nil then correct password
 		if err != nil {
-			fmt.Println(err.Error())
 			renderTemplate(w, "login", "Wrong password entered")
 			return
 		}
 
+		// Create a session
+		sessionID := generateSessionID()
+		sessions[sessionID] = Session{UserID: userID, Username: username}
+
+		// Set the session ID in a cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:  "session_id",
+			Value: sessionID,
+			Path:  "/",
+		})
+
 		renderTemplate(w, "login", "Login was successful")
 		return
-
 	} else {
 		err := errors.New("incorrect HTTP request received")
 		log.Fatal(err)
 	}
+}
+
+func generateSessionID() string {
+	b := make([]byte, 32)
+	_, err := rand.Read(b)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return base64.StdEncoding.EncodeToString(b)
+}
+
+func sessionMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		sessionID := cookie.Value
+		session, ok := sessions[sessionID]
+		if !ok {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		// Set session data in request context
+		ctx := context.WithValue(r.Context(), "session", session)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
 
 type Message struct {
