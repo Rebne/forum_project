@@ -3,7 +3,7 @@
 - [ ] Server uses correct HTTP methods (GET, POST, PUT, etc.).
 
 ### Site functionality
-- [ ] Sessions implemented for user persistence. (Cookies)
+- [x] Sessions implemented for user persistence. (Cookies)
 - [ ] Multiple browser sessions function correctly.
 - [ ] Empty posts and comments not allowed.
 - [ ] Posts can be filtered by category.
