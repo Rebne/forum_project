@@ -14,7 +14,12 @@
         <li><a href="#">Home</a></li>
         <li><a href="#">Categories</a></li>
         <li><a href="#">About</a></li>
-        <li><a href="/login" method="GET">Login/Signup</a></li>
+        {{if .Authenticated}}
+        <li><a href="/profile">Profile</a></li>
+        <li><a href="/logout">Logout</a></li>
+        {{else}}
+        <li><a href="/login">Login/Signup</a></li>
+        {{end}}
       </ul>
     </nav>
   </header>
@@ -32,7 +37,6 @@
     <section id="content">
       <h2>Latest Threads</h2>
       <ul class="thread-list">
-        <!-- //TODO: Add classes and ids and limit <p> width (line lenght) -->
         {{range .Posts}}
         <li>
           <a href="#">{{.Title}}</a>
@@ -41,6 +45,13 @@
         </li>
         {{end}}
       </ul>
+      {{if .Authenticated}}
+      <!-- Content specific to authenticated users -->
+      <a href="/create_post" class="create-post-link">Create a New Post</a>
+      {{else}}
+      <!-- Content specific to non-authenticated users -->
+      <p>Please <a href="/login">login</a> or <a href="/register">register</a> to create posts.</p>
+      {{end}}
     </section>
   </main>
   <footer>

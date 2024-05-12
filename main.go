@@ -68,8 +68,10 @@ func main() {
 	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
 	mux.HandleFunc("/", indexHandler)
 	mux.HandleFunc("/login", loginHandler)
+	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/register", registerHandler)
 	mux.HandleFunc("/search", searchHandler)
+	mux.HandleFunc("/create_post", createPostHandler)
 
 	// Protected routes
 	protectedMux := http.NewServeMux()
@@ -163,6 +165,10 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	//FIXME: Move to new function also for search
 
+	// Check if the session cookie exists
+	_, err := r.Cookie("session_id")
+	isAuthenticated := err == nil // isAuthenticated is true if there is no error in retrieving the cookie
+
 	// Pulling posts from DB
 	rows, err := db.Query("SELECT * FROM posts;")
 	if err != nil {
@@ -194,7 +200,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	content := PageContent{Posts: Posts}
+	// Pass authentication status along with posts when rendering the template
+	content := struct {
+		Posts         []Post
+		Authenticated bool
+	}{
+		Posts:         Posts,
+		Authenticated: isAuthenticated,
+	}
 
 	err = tmpl.Execute(w, content)
 	if err != nil {
@@ -203,7 +216,6 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
@@ -276,6 +288,48 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func createPostHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	// Extract post data from the form
+	title := r.FormValue("title")
+	content := r.FormValue("content")
+	category := r.FormValue("category")
+
+	// Validate post data
+	if title == "" || content == "" || category == "" {
+		http.Error(w, "Title, content, and category are required fields", http.StatusBadRequest)
+		return
+	}
+
+	// Let's assume the user is already authenticated and we have their user ID in the session
+	session := r.Context().Value("session").(Session)
+	userID := session.UserID
+
+	// Insert the post into the database
+	stmt, err := db.Prepare("INSERT INTO posts (users_id, title, content, category, date) VALUES (?, ?, ?, ?, ?);")
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Println("Error preparing SQL statement:", err)
+		return
+	}
+	defer stmt.Close()
+
+	timestamp := time.Now().Format(time.RFC3339)
+	_, err = stmt.Exec(userID, title, content, category, timestamp)
+	if err != nil {
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+		log.Println("Error executing SQL statement:", err)
+		return
+	}
+
+	// Redirect the user to the home page or display a success message
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		renderTemplate(w, "login", "")
@@ -345,6 +399,19 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		err := errors.New("incorrect HTTP request received")
 		log.Fatal(err)
 	}
+}
+
+func logoutHandler(w http.ResponseWriter, r *http.Request) {
+	// Delete the session cookie by setting an expired cookie
+	http.SetCookie(w, &http.Cookie{
+		Name:    "session_id",
+		Value:   "",
+		Path:    "/",
+		Expires: time.Unix(0, 0),
+	})
+
+	// Redirect the user to the login page or any other appropriate page after logout
+	http.Redirect(w, r, "/login", http.StatusSeeOther)
 }
 
 func generateSessionID() string {
