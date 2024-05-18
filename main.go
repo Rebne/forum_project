@@ -149,7 +149,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type PageContent struct {
-	Posts []Post
+	Posts         []Post
+	Authenticated bool
 }
 
 type Post struct {
@@ -201,10 +202,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Pass authentication status along with posts when rendering the template
-	content := struct {
-		Posts         []Post
-		Authenticated bool
-	}{
+	content := PageContent{
 		Posts:         Posts,
 		Authenticated: isAuthenticated,
 	}
