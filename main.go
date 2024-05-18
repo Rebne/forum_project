@@ -386,9 +386,11 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Set the session ID in a cookie
 		http.SetCookie(w, &http.Cookie{
-			Name:  "session_id",
-			Value: sessionID,
-			Path:  "/",
+			Name:     "session_id",
+			Value:    sessionID,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
 		})
 
 		renderTemplate(w, "login", "Login was successful")
@@ -402,10 +404,12 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete the session cookie by setting an expired cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:    "session_id",
-		Value:   "",
-		Path:    "/",
-		Expires: time.Unix(0, 0),
+		Name:     "session_id",
+		Value:    "",
+		Path:     "/",
+		HttpOnly: true,
+		Secure:   true, // Set to true if using HTTPS
+		MaxAge:   -1,
 	})
 
 	// Redirect the user to the login page or any other appropriate page after logout
