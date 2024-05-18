@@ -71,14 +71,14 @@ func main() {
 	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/register", registerHandler)
 	mux.HandleFunc("/search", searchHandler)
-	mux.HandleFunc("/create_post", createPostHandler)
+	mux.HandleFunc("/create_post", sessionMiddleware(createPostHandler))
 
 	// Protected routes
 	protectedMux := http.NewServeMux()
 	protectedMux.HandleFunc("/protected", protectedHandler)
 
 	// Wrap the protectedMux with session middleware
-	http.Handle("/protected", sessionMiddleware(protectedMux))
+	// http.Handle("/protected", sessionMiddleware(protectedMux))
 
 	// Use the standard mux for other routes
 	http.Handle("/", mux)
@@ -421,8 +421,8 @@ func generateSessionID() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func sessionMiddleware(next http.Handler) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func sessionMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
@@ -439,7 +439,7 @@ func sessionMiddleware(next http.Handler) http.Handler {
 		// Set session data in request context
 		ctx := context.WithValue(r.Context(), "session", session)
 		next.ServeHTTP(w, r.WithContext(ctx))
-	})
+	}
 }
 
 type Message struct {
