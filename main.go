@@ -5,7 +5,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/gob"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"html/template"
@@ -59,10 +58,7 @@ func main() {
 
 	gob.Register(&User{})
 
-	_, err := hex.DecodeString("13d6b4dff8f84a10851021ec8608f814570d562c92fe6b5ec4c9f595bcb3234b")
-	if err != nil {
-		log.Fatal(err)
-	}
+	var err error
 
 	mux := http.NewServeMux()
 	mux.Handle("/css/", http.StripPrefix("/css/", http.FileServer(http.Dir("css"))))
