@@ -1,10 +1,12 @@
 /* //TODO: Style page like Codecademy */
 
-/* * {
+* {
   background-color: #FFF0E5;
-} */
+  text-decoration: dashed;
+}
 
 body {
+    background-color: #FFF0E5;
     font-family: sans-serif;
     margin: 0;
     padding: 0;

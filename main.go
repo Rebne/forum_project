@@ -39,7 +39,7 @@ var db *sql.DB
 func init() {
 
 	var err error
-	tmpl, err = template.ParseFiles("static/index.html")
+	tmpl, err = template.ParseGlob("static/*.html")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -70,13 +70,13 @@ func main() {
 	mux.HandleFunc("/create_post", sessionMiddleware(createPostHandler))
 
 	// Protected routes
-	protectedMux := http.NewServeMux()
-	protectedMux.HandleFunc("/protected", protectedHandler)
+	// protectedMux := http.NewServeMux()
+	// protectedMux.HandleFunc("/protected", protectedHandler)
 
 	// Wrap the protectedMux with session middleware
 	// http.Handle("/protected", sessionMiddleware(protectedMux))
 
-	// Use the standard mux for other routes
+	// Use the st	andard mux for other routes
 	http.Handle("/", mux)
 
 	log.Print("Listening...")
@@ -99,6 +99,10 @@ func protectedHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
+
+	// user authentication needs to be checked for the right index page
+	_, err := r.Cookie("session_id")
+	isAuthenticated := err == nil
 
 	r.ParseForm()
 
@@ -136,7 +140,12 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	content := PageContent{Posts: Posts}
 
-	err = tmpl.Execute(w, content)
+	if isAuthenticated {
+		err = tmpl.ExecuteTemplate(w, "protected.html", content)
+	} else {
+		err = tmpl.ExecuteTemplate(w, "index.html", content)
+	}
+
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -159,8 +168,6 @@ type Post struct {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-
-	//FIXME: Move to new function also for search
 
 	// Check if the session cookie exists
 	_, err := r.Cookie("session_id")
@@ -203,7 +210,12 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		Authenticated: isAuthenticated,
 	}
 
-	err = tmpl.Execute(w, content)
+	if isAuthenticated {
+		err = tmpl.ExecuteTemplate(w, "protected.html", content)
+	} else {
+		err = tmpl.ExecuteTemplate(w, "index.html", content)
+	}
+
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
@@ -452,8 +464,7 @@ func renderTemplate(w http.ResponseWriter, title, message string) {
 		Message: message,
 	}
 
-	tmpl := template.Must(template.ParseFiles(fmt.Sprintf("static/%s.html", title)))
-	err := tmpl.Execute(w, data)
+	err := tmpl.ExecuteTemplate(w, fmt.Sprintf("%s.html", title), data)
 	if err != nil {
 		http.Error(w, "Internal server error", http.StatusInternalServerError)
 		return
