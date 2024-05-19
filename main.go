@@ -80,10 +80,19 @@ func main() {
 
 func profileHandler(w http.ResponseWriter, r *http.Request) {
 
-	// dummy
-	userID := 25
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	stmtForCheck, err := db.Prepare("SELECT id FROM users WHERE id = ?;")
+	session, ok := sessions[cookie.Value]
+	if !ok {
+		log.Fatal(err)
+	}
+
+	userID := session.UserID
+
+	stmtForCheck, err := db.Prepare("SELECT username FROM users WHERE id = ?;")
 	if err != nil {
 		log.Fatal(err)
 	}
