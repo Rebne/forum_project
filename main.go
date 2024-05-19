@@ -66,6 +66,7 @@ func main() {
 	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/register", registerHandler)
 	mux.HandleFunc("/search", searchHandler)
+	mux.HandleFunc("/profile", authenticate(profileHandler))
 	mux.HandleFunc("/create_post", authenticate(createPostHandler))
 
 	http.Handle("/", mux)
@@ -74,6 +75,37 @@ func main() {
 	err = http.ListenAndServe(":3000", nil)
 	if err != nil {
 		log.Fatal(err)
+	}
+}
+
+func profileHandler(w http.ResponseWriter, r *http.Request) {
+
+	// dummy
+	userID := 25
+
+	stmtForCheck, err := db.Prepare("SELECT id FROM users WHERE id = ?;")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer stmtForCheck.Close()
+
+	var user string
+	err = stmtForCheck.QueryRow(userID).Scan(&user)
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatal(err)
+	}
+
+	data := struct {
+		Username string
+	}{
+		Username: user,
+	}
+
+	err = tmpl.ExecuteTemplate(w, "profile.html", data)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 }
 
@@ -272,45 +304,53 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func createPostHandler(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
+	if r.Method == http.MethodGet {
+		err := tmpl.ExecuteTemplate(w, "create_post.html", "")
+		if err != nil {
+			log.Println(err)
+			http.Error(w, "internal server error", http.StatusInternalServerError)
+			return
+		}
+	} else if r.Method == http.MethodPost {
+
+		// Extract post data from the form
+		title := r.FormValue("title")
+		content := r.FormValue("content")
+		category := r.FormValue("category")
+
+		// Validate post data
+		if title == "" || content == "" || category == "" {
+			http.Error(w, "Title, content, and category are required fields", http.StatusBadRequest)
+			return
+		}
+
+		// Let's assume the user is already authenticated and we have their user ID in the session
+		session := r.Context().Value("session").(Session)
+		userID := session.UserID
+
+		// Insert the post into the database
+		stmt, err := db.Prepare("INSERT INTO posts (users_id, title, content, category, date) VALUES (?, ?, ?, ?, ?);")
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println("Error preparing SQL statement:", err)
+			return
+		}
+		defer stmt.Close()
+
+		timestamp := time.Now().Format(time.RFC3339)
+		_, err = stmt.Exec(userID, title, content, category, timestamp)
+		if err != nil {
+			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+			log.Println("Error executing SQL statement:", err)
+			return
+		}
+
+		// Redirect the user to the home page or display a success message
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	} else {
 		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
 		return
 	}
-
-	// Extract post data from the form
-	title := r.FormValue("title")
-	content := r.FormValue("content")
-	category := r.FormValue("category")
-
-	// Validate post data
-	if title == "" || content == "" || category == "" {
-		http.Error(w, "Title, content, and category are required fields", http.StatusBadRequest)
-		return
-	}
-
-	// Let's assume the user is already authenticated and we have their user ID in the session
-	session := r.Context().Value("session").(Session)
-	userID := session.UserID
-
-	// Insert the post into the database
-	stmt, err := db.Prepare("INSERT INTO posts (users_id, title, content, category, date) VALUES (?, ?, ?, ?, ?);")
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Println("Error preparing SQL statement:", err)
-		return
-	}
-	defer stmt.Close()
-
-	timestamp := time.Now().Format(time.RFC3339)
-	_, err = stmt.Exec(userID, title, content, category, timestamp)
-	if err != nil {
-		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-		log.Println("Error executing SQL statement:", err)
-		return
-	}
-
-	// Redirect the user to the home page or display a success message
-	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
@@ -377,7 +417,6 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 			Secure:   true,
 		})
-
 		renderTemplate(w, "login", "Login was successful")
 		return
 	} else {
