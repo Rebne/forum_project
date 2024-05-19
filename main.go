@@ -189,8 +189,22 @@ type Post struct {
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the session cookie exists
-	_, err := r.Cookie("session_id")
-	isAuthenticated := err == nil // isAuthenticated is true if there is no error in retrieving the cookie
+	// NOTE: user persistence could be better because currently in the case of server restart
+	// cookie in the browser exists but the key in sessions does not
+	// it would be nice if it would be secure also
+	// meaning that just authenitcation with any random cookie is not secure
+
+	var isAuthenticated bool
+	cookie, err := r.Cookie("session_id")
+	if err == nil {
+		_, ok := sessions[cookie.Value]
+		if ok {
+			isAuthenticated = true
+		} else {
+			cookie.MaxAge = -1 // deleting cookie
+		}
+	}
+	// isAuthenticated is true if there is no error in retrieving the cookie
 
 	// Pulling posts from DB
 	rows, err := db.Query("SELECT * FROM posts;")
@@ -437,12 +451,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	// Delete the session cookie by setting an expired cookie
 	http.SetCookie(w, &http.Cookie{
-		Name:     "session_id",
-		Value:    "",
-		Path:     "/",
-		HttpOnly: true,
-		Secure:   true, // Set to true if using HTTPS
-		MaxAge:   -1,
+		Name:   "session_id",
+		MaxAge: -1,
 	})
 
 	// Redirect the user to the login page or any other appropriate page after logout
