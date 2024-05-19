@@ -20,6 +20,8 @@
     <div style="padding: 8px;"></div>
     <a href="/register" method="POST">Register</a>
     <div style="padding: 8px;"></div>
-    <p>{{.Message}}</p>
-
+    
+    {{if .}}
+    <p>{{.}}</p>
+    {{end}}
 </body>

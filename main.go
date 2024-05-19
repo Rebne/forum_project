@@ -1,7 +1,6 @@
 package main
 
 import (
-	"context"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/gob"
@@ -67,16 +66,8 @@ func main() {
 	mux.HandleFunc("/logout", logoutHandler)
 	mux.HandleFunc("/register", registerHandler)
 	mux.HandleFunc("/search", searchHandler)
-	mux.HandleFunc("/create_post", sessionMiddleware(createPostHandler))
+	mux.HandleFunc("/create_post", authenticate(createPostHandler))
 
-	// Protected routes
-	// protectedMux := http.NewServeMux()
-	// protectedMux.HandleFunc("/protected", protectedHandler)
-
-	// Wrap the protectedMux with session middleware
-	// http.Handle("/protected", sessionMiddleware(protectedMux))
-
-	// Use the st	andard mux for other routes
 	http.Handle("/", mux)
 
 	log.Print("Listening...")
@@ -84,18 +75,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-}
-
-func protectedHandler(w http.ResponseWriter, r *http.Request) {
-	// Retrieve session data from request context
-	session := r.Context().Value("session").(Session)
-
-	// You can now use session data as needed
-	username := session.Username
-	userID := session.UserID
-
-	// Example response
-	fmt.Fprintf(w, "Protected route accessed by user: %s (ID: %d)", username, userID)
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -154,8 +133,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 type PageContent struct {
-	Posts         []Post
-	Authenticated bool
+	Posts []Post
 }
 
 type Post struct {
@@ -206,8 +184,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Pass authentication status along with posts when rendering the template
 	content := PageContent{
-		Posts:         Posts,
-		Authenticated: isAuthenticated,
+		Posts: Posts,
 	}
 
 	if isAuthenticated {
@@ -421,7 +398,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Redirect the user to the login page or any other appropriate page after logout
-	http.Redirect(w, r, "/login", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func generateSessionID() string {
@@ -433,7 +410,7 @@ func generateSessionID() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-func sessionMiddleware(next http.HandlerFunc) http.HandlerFunc {
+func authenticate(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
@@ -442,27 +419,18 @@ func sessionMiddleware(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		sessionID := cookie.Value
-		session, ok := sessions[sessionID]
+		_, ok := sessions[sessionID]
 		if !ok {
 			http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 
 		// Set session data in request context
-		ctx := context.WithValue(r.Context(), "session", session)
-		next.ServeHTTP(w, r.WithContext(ctx))
+		next.ServeHTTP(w, r)
 	}
 }
 
-type Message struct {
-	Message string
-}
-
-func renderTemplate(w http.ResponseWriter, title, message string) {
-
-	data := Message{
-		Message: message,
-	}
+func renderTemplate(w http.ResponseWriter, title string, data any) {
 
 	err := tmpl.ExecuteTemplate(w, fmt.Sprintf("%s.html", title), data)
 	if err != nil {

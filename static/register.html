@@ -22,6 +22,9 @@
     <div style="padding: 8px;"></div>
     <a href="/login" method="POST">Already have an account?</a>
     <div style="padding: 8px;"></div>
-    <p>{{.Message}}</p>
+    
+    {{if .}}
+    <p>{{.}}</p>
+    {{end}}
 
 </body>
