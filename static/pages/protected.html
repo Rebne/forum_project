@@ -9,9 +9,8 @@
       <h2>Latest Threads</h2>
       <ul class="thread-list">
         {{range .Posts}}
-        <div class="thread-parent">
-          <div class="thread-child thread-child-front">
-            <li>
+        <div>
+            <li class="thread-item">
               <div class="link-container">
                 <a class="link" href="#">{{.Title}}</a>
               </div>
@@ -19,8 +18,6 @@
               <p>by {{.Username}} - {{.Date}}</p>
               <p>{{.Category}}</p>
             </li>
-          </div>
-          <div class="thread-child thread-child-back"></div>
         </div>
         {{end}}
       </ul>
