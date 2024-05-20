@@ -1,12 +1,46 @@
-/* //TODO: Style page like Codecademy */
 
 * {
   background-color: #FFF0E5;
   text-decoration: dashed;
 }
 
+.thread-parent {
+  position: relative;
+}
+
+.link-container {
+  position: relative;
+  display: inline-block;
+}
+
+.header-element {
+  margin-bottom: 30px;
+}
+.link {
+  position: relative;
+  z-index: 2;
+  text-decoration: none;
+  color: inherit;
+}
+
+.link-container::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: black;
+  z-index: 1;
+  transition: transform 0.1s;
+}
+
+.link:hover + .link-container::before,
+.link-container:hover::before {
+  transform: translate(0px, 2.5px);
+}
+
 body {
-    background-color: #FFF0E5;
     font-family: sans-serif;
     margin: 0;
     padding: 0;
@@ -17,9 +51,6 @@ body {
     color: #1a1a1a;
   }
   
-  a:hover {
-    color: #3A10E5;; /* Reddit orange hover color */
-  }
 
   header {
     padding: 10px 20px;
@@ -42,6 +73,7 @@ body {
   
   header nav li {
     margin-right: 20px;
+    margin-bottom: 2.5px;
   }
 
   main {
@@ -91,14 +123,6 @@ body {
     list-style: none;
     margin: 0;
     padding: 0;
-  }
-  
-  .thread-list li {
-    border-bottom: 1px solid #ddd;
-    padding: 10px 0;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
   }
 
   .vote {
