@@ -109,7 +109,20 @@ func authenticate(next http.HandlerFunc) http.HandlerFunc {
 		sessionID := cookie.Value
 		_, ok := sessions[sessionID]
 		if !ok {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			// FIXME: FOR DEVELOPMENT
+
+			sessionID := generateSessionID()
+			sessions[sessionID] = Session{UserID: 2}
+
+			// Set the session ID in a cookie
+			http.SetCookie(w, &http.Cookie{
+				Name:     "session_id",
+				Value:    sessionID,
+				Path:     "/",
+				HttpOnly: true,
+				Secure:   true,
+			})
+			// http.Redirect(w, r, "/login", http.StatusSeeOther)
 			return
 		}
 

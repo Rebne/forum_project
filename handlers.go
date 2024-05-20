@@ -115,15 +115,32 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// it would be nice if it would be secure also
 	// meaning that just authenitcation with any random cookie is not secure
 
-	var isAuthenticated bool
-	cookie, err := r.Cookie("session_id")
-	if err == nil {
-		_, ok := sessions[cookie.Value]
-		if ok {
-			isAuthenticated = true
-		} else {
-			cookie.MaxAge = -1 // deleting cookie
-		}
+	// var isAuthenticated bool
+	// cookie, err := r.Cookie("session_id")
+	// if err == nil {
+	// 	_, ok := sessions[cookie.Value]
+	// 	if ok {
+	// 		isAuthenticated = true
+	// 	} else {
+	// 		cookie.MaxAge = -1 // deleting cookie
+	// 	}
+	// }
+	// FIXME: FOR DEVELOPMENT
+	isAuthenticated := true
+	_, err := r.Cookie("session_id")
+
+	if err != nil {
+		sessionID := generateSessionID()
+		sessions[sessionID] = Session{UserID: 2}
+
+		// Set the session ID in a cookie
+		http.SetCookie(w, &http.Cookie{
+			Name:     "session_id",
+			Value:    sessionID,
+			Path:     "/",
+			HttpOnly: true,
+			Secure:   true,
+		})
 	}
 	// isAuthenticated is true if there is no error in retrieving the cookie
 
