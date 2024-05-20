@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-{{template "Header"}}
+{{template "Head"}}
 <body>
 {{template "HeaderSignedOut"}}
   <main>
@@ -15,7 +15,17 @@
         </ul>
     </aside>
     <section id="content">
-      {{template "Posts"}}
+      <h2>Latest Threads</h2>
+      <ul class="thread-list">
+        {{range .Posts}}
+        <li>
+          <a href="#">{{.Title}}</a>
+          <p>{{.Content}}</p>
+          <p>by {{.Username}} - {{.Date}}</p>
+          <p>{{.Category}}</p>
+        </li>
+        {{end}}
+      </ul>
       <p>Please <a href="/login">login</a> or <a href="/register">register</a> to create posts.</p>
     </section>
   </main>
