@@ -18,7 +18,7 @@ body {
   }
   
   a:hover {
-    color: #0079d3; /* Reddit orange hover color */
+    color: #3A10E5;; /* Reddit orange hover color */
   }
 
   header {
@@ -99,10 +99,6 @@ body {
     display: flex;
     justify-content: space-between;
     align-items: center;
-  }
-  
-  .thread-list li:hover {
-    background-color: #f5f5f5;
   }
 
   .vote {

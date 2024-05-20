@@ -48,7 +48,7 @@ var db *sql.DB
 func init() {
 
 	var err error
-	tmpl, err = template.ParseGlob("static/*.html")
+	tmpl, err = template.ParseGlob("static/**/*.html")
 	if err != nil {
 		log.Fatal(err)
 	}
