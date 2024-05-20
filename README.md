@@ -1,6 +1,6 @@
 ### General
-- [ ] Only allowed packages are used.
-- [ ] Server uses correct HTTP methods (GET, POST, PUT, etc.).
+- [x] Only allowed packages are used.
+- [x] Server uses correct HTTP methods (GET, POST, PUT, etc.).
 
 ### Site functionality
 - [x] Sessions implemented for user persistence. (Cookies)
@@ -30,16 +30,16 @@
 ### Registration and login
 - [x] Registration requires email, username, and password.
 - [x] Incorrect email or password detected during login.
-- [ ] Registered users can log in and access features.
+- [x] Registered users can log in and access features.
 - [x] Duplicate email or username detected during registration.
 - [x] Users can register successfully.
 - [x] Forum displays warning message for invalid login attempts.
-- [ ] User-friendly and secure registration process. [Extra]
+- [x] User-friendly and secure registration process. [Extra]
 - [x] Passwords secured and encrypted using bcrypt or other strong algorithms. [Extra]
 
 ### User Interaction
 - [ ] Only registered users can create posts and comments.
-- [ ] Posts can be associated with categories.
+- [x] Posts can be associated with categories.
 - [ ] Only registered users can like or dislike posts and comments.
 - [ ] Registered users can view their created and liked posts.
 - [ ] Users have access to profile pages. [Extra]
