@@ -123,7 +123,7 @@ func authenticate(next http.HandlerFunc) http.HandlerFunc {
 				Secure:   true,
 			})
 			// http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
+			// return
 		}
 
 		// Set session data in request context
