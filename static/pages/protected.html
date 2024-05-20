@@ -2,18 +2,7 @@
 <html lang="en">
 {{template "Header"}}
 <body>
-  <header>
-    <h1><a href="#">Literary Lions</a></h1> 
-    <nav>
-      <ul>
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Categories</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="/profile">Profile</a></li>
-        <li><a href="/logout">Logout</a></li>
-      </ul>
-    </nav>
-  </header>
+  {{template "Header"}}
   <main>
     <aside>
       <h2>Search</h2>
@@ -26,17 +15,7 @@
         </ul>
     </aside>
     <section id="content">
-      <h2>Latest Threads</h2>
-      <ul class="thread-list">
-        {{range .Posts}}
-        <li>
-          <a href="#">{{.Title}}</a>
-          <p>{{.Content}}</p>
-          <p>by {{.Username}} - {{.Date}}</p>
-        </li>
-        {{end}}
-      </ul>
-      <!-- Content specific to authenticated users -->
+      {{template "Posts"}}
       <a href="/create_post" class="create-post-link">Create a New Post</a>
     </section>
   </main>

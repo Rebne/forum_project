@@ -2,17 +2,7 @@
 <html lang="en">
 {{template "Header"}}
 <body>
-  <header>
-    <h1><a href="#">Literary Lions</a></h1>
-    <nav>
-      <ul>
-        <li><a href="#">Home</a></li>
-        <li><a href="#">Categories</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="/login">Login/Signup</a></li>
-      </ul>
-    </nav>
-  </header>
+{{template "HeaderSignedOut"}}
   <main>
     <aside>
       <h2>Search</h2>
@@ -25,16 +15,7 @@
         </ul>
     </aside>
     <section id="content">
-      <h2>Latest Threads</h2>
-      <ul class="thread-list">
-        {{range .Posts}}
-        <li>
-          <a href="#">{{.Title}}</a>
-          <p>{{.Content}}</p>
-          <p>by {{.Username}} - {{.Date}}</p>
-        </li>
-        {{end}}
-      </ul>
+      {{template "Posts"}}
       <p>Please <a href="/login">login</a> or <a href="/register">register</a> to create posts.</p>
     </section>
   </main>
