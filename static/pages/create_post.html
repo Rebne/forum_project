@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+{{template "Header"}}
+<body>
+    <header>
+        <h1><a href="#">Literary Lions</a></h1> 
+        <nav>
+            <ul>
+                <li><a href="/">Home</a></li>
+                <li><a href="#">Categories</a></li>
+                <li><a href="#">About</a></li>
+                <li><a href="/login" method="GET">Login/Signup</a></li>
+            </ul>
+        </nav>
+    </header>
+    <main>
+        <section id="content">
+            <h2>Create a New Post</h2>
+            <form action="/create_post" method="post">
+                <label for="title">Title:</label><br>
+                <input type="text" id="title" name="title"><br>
+                <label for="content">Content:</label><br>
+                <textarea id="content" name="content"></textarea><br>
+                <label for="category">Category:</label><br>
+                <input type="text" id="category" name="category"><br>
+                <input type="submit" value="Create Post">
+            </form>
+        </section>
+    </main>
+    <footer>
+        <p>&copy; Literary Lions 2024</p>
+    </footer>
+</body>
+</html>

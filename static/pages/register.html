@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+{{template "Header"}}
+<body>
+    <a href="/" method="GET">Home</a>
+    <div style="padding: 8px;"></div>
+    <h1>Register</h1>
+    <form action="/register" method="POST">
+        <label for="email">Email:</label><br>
+        <input type="text" id="email" name="email"><br>
+        <label for="username">Username:</label><br>
+        <input type="text" id="username" name="username"><br>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password"><br><br>
+        <input type="submit" value="Submit">
+    </form>
+    <div style="padding: 8px;"></div>
+    <a href="/login" method="POST">Already have an account?</a>
+    <div style="padding: 8px;"></div>
+    
+    {{if .}}
+    <p>{{.}}</p>
+    {{end}}
+
+</body>
