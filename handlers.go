@@ -111,9 +111,9 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Check if the session cookie exists
 	// NOTE: user persistence could be better because currently in the case of server restart
-	// cookie in the browser exists but the key in sessions does not
-	// it would be nice if it would be secure also
-	// meaning that just authenitcation with any random cookie is not secure
+	//  cookie in the browser exists but the key in sessions does not
+	//  it would be nice if it would be secure also
+	//  meaning that just authenitcation with any random cookie is not secure
 
 	// var isAuthenticated bool
 	// cookie, err := r.Cookie("session_id")

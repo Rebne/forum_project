@@ -3,7 +3,6 @@
   background-color: #FFF0E5;
 }
 
-
 .thread-item {
   background-color: white;
   border: 2.5px solid;
@@ -68,7 +67,7 @@ body {
   header {
     padding: 10px 20px;
     display: flex;
-    justify-content: space-between;
+    /* justify-content: space-between; */
     align-items: center;
   }
   
@@ -94,9 +93,12 @@ body {
   }
   
   aside {
+    border-radius: 10px;
     width: 20%;
-    padding: 20px;
-    border-right: 1px solid #ddd;
+    margin-left: 10px;
+    padding-right: 10px;
+    padding: 10px;
+    border: 2.5px solid black;
   }
   
   aside h2 {
@@ -109,15 +111,28 @@ body {
   }
   
   aside input[type="text"] {
-    width: 100%;
+    width: 95%;
+    background-color: white;
     padding: 5px;
-    border: 1px solid #ccc;
+    margin-bottom: 5px;
+    border: 1px solid black;
+    box-sizing: border-box;
+  }
+
+  input:focus, textarea:focus, select:focus{
+    outline: none;
+}
+
+  aside input[type="text"]:focus {
+    border-color: black;
+    box-shadow: 0 0 0 1.5px black;
   }
   
   aside button {
-    background-color: #4CAF50; 
+    background-color: #3a10e5; 
     color: white;
     padding: 5px 10px;
+    border-radius: 5px;
     border: none;
     cursor: pointer;
   }
