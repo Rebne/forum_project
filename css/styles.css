@@ -79,6 +79,10 @@ body {
     margin-left: 30px;
   }
   
+  .thread-title {
+    font-weight: bold;
+    font-size: 20px;
+  }
   header h1 {
     font-size: 20px;
     font-weight: bold;
@@ -108,6 +112,12 @@ body {
     padding: 10px;
     border-right: 2.5px solid black;
   }
+
+  .bordered {
+    border: 2.5px solid black;
+    border-radius: 10px;
+  }
+  
   
   aside h2 {
     margin-bottom: 10px;
@@ -135,8 +145,22 @@ body {
     border-color: black;
     box-shadow: 0 0 0 1.5px black;
   }
+
+  .search-button {
+    padding: 5px 10px;
+    background-color: white;
+    border: 1px solid black;
+  }
+
+  .click-button:active {
+    transition: transform 0.02s;
+    transform: translateY(2px);
+  }
+  .search-button:active {
+    box-shadow: 0 0 0 1.5px black;
+  }
   
-  aside button {
+  /* aside button {
     background-color: #3a10e5; 
     color: white;
     padding: 5px 10px;
@@ -144,7 +168,7 @@ body {
     border: none;
     cursor: pointer;
   }
-  
+   */
   section {
     flex: 1;
     padding-top: 10px;

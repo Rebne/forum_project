@@ -11,8 +11,8 @@
         {{range .Posts}}
         <div>
             <li class="thread-item">
-              <div class="link-container">
-                <a class="link" href="#">{{.Title}}</a>
+              <div class="link-container click-button">
+                <a class="link thread-title" href="#">{{.Title}}</a>
               </div>
               <p>{{.Content}}</p>
               <p>by {{.Username}} - {{.Date}}</p>
@@ -21,7 +21,7 @@
         </div>
         {{end}}
       </ul>
-      <div class="link-container">
+      <div class="link-container click-button">
         <a class="link" href="/create_post" class="create-post-link">Create a New Post</a>
       </div>
     </section>
