@@ -17,6 +17,9 @@
             </form>
         </aside>
     </main>
+    {{if .}}
+        <p class="error-message">{{.}}</p>
+    {{end}}
     <footer>
         <p>&copy; Literary Lions 2024</p>
     </footer>

@@ -104,6 +104,11 @@ body {
     display: flex;
   }
 
+  .error-message {
+    color: #b81708;
+    margin-left: 10px;
+  }
+
   aside {
     /* border-radius: 10px; */
     width: 20%;

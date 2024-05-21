@@ -281,14 +281,23 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate post data
 		if title == "" || content == "" || category == "" {
-			http.Error(w, "Title, content, and category are required fields", http.StatusBadRequest)
+			renderTemplate(w, "create_post",
+				"Title, content, and category are required fields")
 			return
 		}
 
 		// Let's assume the user is already authenticated and we have their user ID in the session
-		session := r.Context().Value("session").(Session)
-		userID := session.UserID
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			log.Fatal(err)
+		}
 
+		session, ok := sessions[cookie.Value]
+		if !ok {
+			log.Fatal(err)
+		}
+
+		userID := session.UserID
 		// Insert the post into the database
 		stmt, err := db.Prepare("INSERT INTO posts (users_id, title, content, category, date) VALUES (?, ?, ?, ?, ?);")
 		if err != nil {
@@ -296,9 +305,10 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 			log.Println("Error preparing SQL statement:", err)
 			return
 		}
+
 		defer stmt.Close()
 
-		timestamp := time.Now().Format(time.RFC3339)
+		timestamp := time.Now().Format(time.DateTime)
 		_, err = stmt.Exec(userID, title, content, category, timestamp)
 		if err != nil {
 			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
