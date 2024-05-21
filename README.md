@@ -1,3 +1,12 @@
+## TODO
+
+- [ ] Category filtering (connected with search)
+- [ ] Complete profile page
+- [ ] Comment functionality
+- [ ] Like/Vote functionality
+- [ ] Thread pages
+
+
 ### General
 - [x] Only allowed packages are used.
 - [x] Server uses correct HTTP methods (GET, POST, PUT, etc.).
@@ -38,11 +47,11 @@
 - [x] Passwords secured and encrypted using bcrypt or other strong algorithms. [Extra]
 
 ### User Interaction
-- [ ] Only registered users can create posts and comments.
+- [x] Only registered users can create posts and comments.
 - [x] Posts can be associated with categories.
 - [ ] Only registered users can like or dislike posts and comments.
 - [ ] Registered users can view their created and liked posts.
-- [ ] Users have access to profile pages. [Extra]
+- [x] Users have access to profile pages. [Extra]
 
 ### Error Handling
 - [ ] Server uses appropriate HTTP response codes (2XX, 4XX).
