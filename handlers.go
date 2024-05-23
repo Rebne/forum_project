@@ -434,7 +434,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 			Secure:   true,
 		})
-		renderTemplate(w, "login", "Login was successful")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	} else {
 		err := errors.New("incorrect HTTP request received")
