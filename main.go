@@ -20,6 +20,7 @@ import (
 type User struct {
 	Name     string
 	Password string
+	Bio      string
 }
 
 type Session struct {
@@ -42,6 +43,13 @@ type Post struct {
 	Username string
 	Likes    int
 	Dislikes int
+}
+
+type ProfileData struct {
+	Username     string
+	Bio          string
+	CreatedPosts []Post
+	LikedPosts   []Post
 }
 
 var sessions map[string]Session

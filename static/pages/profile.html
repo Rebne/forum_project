@@ -5,9 +5,28 @@
   {{template "Header"}}
   <main>
     <section id="content">
-      <h2>User Profile</h2>
-      <p>Welcome, {{.Username}}!</p>
-      <!-- Display user profile information here -->
+      <h2>{{.Username}}'s Profile</h2>
+      <p>{{.Username}}</p>
+      <div id="bio-section">
+        <h3>Bio</h3>
+        <textarea id="bio" rows="4" cols="50">{{.Bio}}</textarea>
+      </div>
+      <div id="posts-section">
+        <h3>Posts by {{.Username}}</h3>
+        <ul id="user-posts">
+          {{range .CreatedPosts}}
+          <li>{{.Title}} - {{.Date}}</li>
+          {{end}}
+        </ul>
+      </div>
+      <div id="liked-section">
+        <h3>Posts Liked by {{.Username}}</h3>
+        <ul id="liked-posts">
+          {{range .LikedPosts}}
+          <li>{{.Title}} - {{.Date}}</li>
+          {{end}}
+        </ul>
+      </div>
     </section>
   </main>
   <footer>

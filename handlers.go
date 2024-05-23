@@ -13,7 +13,6 @@ import (
 )
 
 func profileHandler(w http.ResponseWriter, r *http.Request) {
-
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
 		log.Fatal(err)
@@ -38,13 +37,44 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	data := struct {
-		Username string
-	}{
-		Username: user,
+	// Fetch user's bio from the database
+	var bio string
+	err = db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatal(err)
 	}
 
-	err = tmpl.ExecuteTemplate(w, "profile.html", data)
+	// Fetch user's created posts from the database
+	rows, err := db.Query("SELECT * FROM posts WHERE users_id = ?", userID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var createdPosts []Post
+	for rows.Next() {
+		var post Post
+		err = rows.Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date)
+		if err != nil {
+			log.Fatal(err)
+		}
+		createdPosts = append(createdPosts, post)
+	}
+
+	// Fetch user's liked posts from the database
+	// Will need to implement this query based on how likes are stored in the database
+	var likedPosts []Post
+
+	// Construct the ProfileData struct
+	profileData := ProfileData{
+		Username:     session.Username,
+		Bio:          bio,
+		CreatedPosts: createdPosts,
+		LikedPosts:   likedPosts,
+	}
+
+	// Render the profile.html template with the ProfileData
+	err = tmpl.ExecuteTemplate(w, "profile.html", profileData)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

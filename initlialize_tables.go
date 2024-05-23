@@ -28,7 +28,8 @@ func initializeSQLiteTables(db *sql.DB) {
         username TEXT NOT NULL UNIQUE,
 		email TEXT NOT NULL UNIQUE,
 		date_created TIMESTAMP NOT NULL,
-        password BLOB NOT NULL
+        password BLOB NOT NULL,
+		bio TEXT
     );`)
 	if err != nil {
 		log.Fatal(err)
