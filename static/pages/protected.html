@@ -2,7 +2,7 @@
 <html lang="en">
 {{template "Head"}}
 <body>
-  {{template "Header"}}
+{{template "Header"}}
   <main>
     {{template "Searchbar"}}
     <section id="content">
@@ -17,7 +17,16 @@
               <p>{{.Content}}</p>
               <p>by {{.Username}} - {{.Date}}</p>
               <p>{{.Category}}</p>
-            </li>
+              <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p>
+          
+          {{if $.IsAuthenticated}}
+          <form action="/like_post" method="POST">
+            <input type="hidden" name="post_id" value="{{.ID}}">
+            <button type="submit" name="action" value="like">Like</button>
+            <button type="submit" name="action" value="dislike">Dislike</button>
+          </form>
+          {{end}}
+        </li>
         </div>
         {{end}}
       </ul>
@@ -27,7 +36,7 @@
     </section>
   </main>
   <footer>
-    <p class="copyright">&copy; Literary Lions 2024</p>
+    <p>&copy; Literary Lions 2024</p>
   </footer>
 </body>
 </html>

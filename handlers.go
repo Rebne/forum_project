@@ -108,67 +108,34 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
-
-	// Check if the session cookie exists
-	// NOTE: user persistence could be better because currently in the case of server restart
-	//  cookie in the browser exists but the key in sessions does not
-	//  it would be nice if it would be secure also
-	//  meaning that just authenitcation with any random cookie is not secure
-
-	// var isAuthenticated bool
-	// cookie, err := r.Cookie("session_id")
-	// if err == nil {
-	// 	_, ok := sessions[cookie.Value]
-	// 	if ok {
-	// 		isAuthenticated = true
-	// 	} else {
-	// 		cookie.MaxAge = -1 // deleting cookie
-	// 	}
-	// }
-	// FIXME: FOR DEVELOPMENT
-	isAuthenticated := true
-	_, err := r.Cookie("session_id")
-
-	if err != nil {
-		sessionID := generateSessionID()
-		sessions[sessionID] = Session{UserID: 2}
-
-		// Set the session ID in a cookie
-		http.SetCookie(w, &http.Cookie{
-			Name:     "session_id",
-			Value:    sessionID,
-			Path:     "/",
-			HttpOnly: true,
-			Secure:   true,
-		})
+	// Check if the user is authenticated
+	isAuthenticated := false
+	if _, err := r.Cookie("session_id"); err == nil {
+		isAuthenticated = true
 	}
-	// isAuthenticated is true if there is no error in retrieving the cookie
 
-	// Pulling posts from DB
-	rows, err := db.Query("SELECT * FROM posts;")
+	// Query to get posts with like and dislike counts
+	rows, err := db.Query(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date,
+                           u.username,
+                           COALESCE(SUM(CASE WHEN pl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
+                           COALESCE(SUM(CASE WHEN pl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
+                           FROM posts p
+                           JOIN users u ON p.users_id = u.id
+                           LEFT JOIN posts_likes pl ON p.id = pl.posts_id
+                           GROUP BY p.id, p.users_id, p.title, p.content, p.category, p.date, u.username;`)
 	if err != nil {
 		log.Fatal(err)
 	}
 	defer rows.Close()
 
 	Posts := []Post{}
-	var user_id int
-	var id int
-	var date string
 	for rows.Next() {
 		tmp := Post{}
-		err = rows.Scan(&id, &user_id, &tmp.Title, &tmp.Content, &tmp.Category, &date)
+		err = rows.Scan(&tmp.ID, &tmp.User_id, &tmp.Title, &tmp.Content, &tmp.Category, &tmp.Date, &tmp.Username, &tmp.Likes, &tmp.Dislikes)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		//TODO: Reformat date
-
-		db.QueryRow("SELECT username FROM users WHERE id = ?;", user_id).Scan(&tmp.Username)
-		tmp.Date = date[:len(date)-10]
 		Posts = append(Posts, tmp)
-
-		// fmt.Printf("%d, %s, %s, %s, %s, %s\n", id, tmp.Username, tmp.Title, tmp.Content, tmp.Category, tmp.Date)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -177,7 +144,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Pass authentication status along with posts when rendering the template
 	content := PageContent{
-		Posts: Posts,
+		Posts:           Posts,
+		IsAuthenticated: isAuthenticated,
 	}
 
 	if isAuthenticated {
@@ -192,6 +160,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
@@ -405,4 +374,45 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Redirect the user to the login page or any other appropriate page after logout
 	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
+func likePostHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		session, ok := sessions[cookie.Value]
+		if !ok {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		userID := session.UserID
+		postID := r.FormValue("post_id")
+		action := r.FormValue("action")
+
+		var isDislike int
+		if action == "like" {
+			isDislike = 0
+		} else if action == "dislike" {
+			isDislike = 1
+		} else {
+			http.Error(w, "Invalid action", http.StatusBadRequest)
+			return
+		}
+
+		// Insert or update like/dislike
+		_, err = db.Exec(`INSERT INTO posts_likes (users_id, posts_id, is_dislike) VALUES (?, ?, ?)
+                          ON CONFLICT(users_id, posts_id) DO UPDATE SET is_dislike=excluded.is_dislike;`,
+			userID, postID, isDislike)
+		if err != nil {
+			http.Error(w, "Failed to update like/dislike", http.StatusInternalServerError)
+			return
+		}
+
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
 }

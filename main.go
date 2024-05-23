@@ -28,16 +28,20 @@ type Session struct {
 }
 
 type PageContent struct {
-	Posts []Post
+	Posts           []Post
+	IsAuthenticated bool
 }
 
 type Post struct {
+	ID       int
 	User_id  int
 	Title    string
 	Content  string
 	Category string
 	Date     string
 	Username string
+	Likes    int
+	Dislikes int
 }
 
 var sessions map[string]Session
@@ -78,6 +82,7 @@ func main() {
 	mux.HandleFunc("/search", searchHandler)
 	mux.HandleFunc("/profile", authenticate(profileHandler))
 	mux.HandleFunc("/create_post", authenticate(createPostHandler))
+	mux.HandleFunc("/like_post", authenticate(likePostHandler))
 
 	http.Handle("/", mux)
 
