@@ -3,7 +3,7 @@
 - [ ] Category filtering (connected with search)
 - [ ] Complete profile page
 - [ ] Comment functionality
-- [ ] Like/Vote functionality
+- [x] Like/Vote functionality
 - [ ] Thread pages
 
 
