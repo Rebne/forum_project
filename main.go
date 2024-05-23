@@ -91,6 +91,7 @@ func main() {
 	mux.HandleFunc("/profile", authenticate(profileHandler))
 	mux.HandleFunc("/create_post", authenticate(createPostHandler))
 	mux.HandleFunc("/like_post", authenticate(likePostHandler))
+	mux.HandleFunc("/updatebio", authenticate(updateBioHandler))
 
 	http.Handle("/", mux)
 

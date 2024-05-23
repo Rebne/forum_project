@@ -82,6 +82,53 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func updateBioHandler(w http.ResponseWriter, r *http.Request) {
+	// Extract bio data from the form submission
+	r.ParseForm()
+	bio := r.Form.Get("bio")
+
+	// Retrieve the session ID from the user's cookie
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		http.Error(w, "Session not found", http.StatusUnauthorized)
+		return
+	}
+
+	// Retrieve the userID from the session
+	session, ok := sessions[cookie.Value]
+	if !ok {
+		http.Error(w, "Session not found", http.StatusUnauthorized)
+		return
+	}
+	userID := session.UserID
+
+	// Begin transaction
+	tx, err := db.Begin()
+	if err != nil {
+		http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+		return
+	}
+
+	// Update the user's bio in the database
+	_, err = tx.Exec("UPDATE users SET bio = ? WHERE id = ?", bio, userID)
+	if err != nil {
+		// Rollback transaction if an error occurs
+		tx.Rollback()
+		http.Error(w, "Failed to update bio", http.StatusInternalServerError)
+		return
+	}
+
+	// Commit transaction
+	err = tx.Commit()
+	if err != nil {
+		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect the user back to their profile page
+	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+}
+
 func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 	// user authentication needs to be checked for the right index page

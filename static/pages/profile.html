@@ -9,7 +9,10 @@
       <p>{{.Username}}</p>
       <div id="bio-section">
         <h3>Bio</h3>
-        <textarea id="bio" rows="4" cols="50">{{.Bio}}</textarea>
+        <form action="/updatebio" method = "post">
+          <textarea id="bio" name="bio" rows="4" cols="50">{{.Bio}}</textarea>
+          <button type="submit">Save Bio</button>
+        </form>
       </div>
       <div id="posts-section">
         <h3>Posts by {{.Username}}</h3>
