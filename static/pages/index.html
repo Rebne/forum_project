@@ -15,7 +15,7 @@
                 <a class="link thread-title" href="/post/{{.ID}}">{{.Title}}</a>
               </div>
               <p>{{.Content}}</p>
-              <p>by {{.Username}} - {{.Date}}</p>
+              <p>by <a href="/profile/{{.Username}}">{{.Username}}</a> - {{.Date}}</p>
               <p>{{.Category}}</p>
               <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p>
             </li>

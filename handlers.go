@@ -149,7 +149,7 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 		LikedPosts:   likedPosts,
 	}
 
-	err = tmpl.ExecuteTemplate(w, "profile.html", profileData)
+	err = tmpl.ExecuteTemplate(w, "profile_view.html", profileData)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
