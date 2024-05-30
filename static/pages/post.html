@@ -1,5 +1,10 @@
 <html lang="en">
-{{template "Head"}}
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Post.Title}}</title>
+    <link rel="stylesheet" href="../../css/styles.css">
+</head>
 <body>
   {{template "Header"}}
   <main>
@@ -11,7 +16,7 @@
       <p>Likes: {{.Post.Likes}} Dislikes: {{.Post.Dislikes}}</p>
       <h3>Comments</h3>
       {{range .Comments}}
-      <div class="comment-box">
+      <div class="thread-item">
         <p><strong>{{.Username}}</strong> - {{.Date}}</p>
         <p>{{.Content}}</p>
       </div>
