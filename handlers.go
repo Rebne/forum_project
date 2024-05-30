@@ -15,37 +15,27 @@ import (
 func profileHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
-		log.Fatal(err)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
 	}
 
 	session, ok := sessions[cookie.Value]
 	if !ok {
-		log.Fatal(err)
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+		return
 	}
 
 	userID := session.UserID
 
-	stmtForCheck, err := db.Prepare("SELECT username FROM users WHERE id = ?;")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer stmtForCheck.Close()
-
-	var user string
-	err = stmtForCheck.QueryRow(userID).Scan(&user)
-	if err != nil && err != sql.ErrNoRows {
-		log.Fatal(err)
-	}
-
-	// Fetch user's bio from the database
+	// Fetch user's bio
 	var bio string
 	err = db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
 	if err != nil && err != sql.ErrNoRows {
 		log.Fatal(err)
 	}
 
-	// Fetch user's created posts from the database
-	rows, err := db.Query("SELECT * FROM posts WHERE users_id = ?", userID)
+	// Fetch user's created posts
+	rows, err := db.Query("SELECT id, users_id, title, content, category, date FROM posts WHERE users_id = ?", userID)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -61,9 +51,25 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		createdPosts = append(createdPosts, post)
 	}
 
-	// Fetch user's liked posts from the database
-	// Will need to implement this query based on how likes are stored in the database
+	// Fetch user's liked posts
+	likedRows, err := db.Query(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date
+                                FROM posts p
+                                JOIN posts_likes pl ON p.id = pl.posts_id
+                                WHERE pl.users_id = ? AND pl.is_dislike = 0`, userID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer likedRows.Close()
+
 	var likedPosts []Post
+	for likedRows.Next() {
+		var post Post
+		err = likedRows.Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date)
+		if err != nil {
+			log.Fatal(err)
+		}
+		likedPosts = append(likedPosts, post)
+	}
 
 	// Construct the ProfileData struct
 	profileData := ProfileData{
