@@ -261,3 +261,10 @@ section h2 {
 .vote__down.active {
   color: #0079d3;
 }
+
+.comment-box {
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  background-color: #f0f0f0;
+}
