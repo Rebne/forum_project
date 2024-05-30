@@ -4,7 +4,7 @@
 - [ ] Complete profile page
 - [ ] Comment functionality
 - [x] Like/Vote functionality
-- [ ] Thread pages
+- [x] Thread pages
 
 
 ### General
@@ -17,8 +17,8 @@
 - [ ] Empty posts and comments not allowed.
 - [ ] Posts can be filtered by category.
 - [ ] Number of likes and dislikes for comments visible to all users.
-- [ ] Number of likes and dislikes displayed and updated correctly.
-- [ ] Posts cannot be liked and disliked simultaneously.
+- [x] Number of likes and dislikes displayed and updated correctly.
+- [x] Posts cannot be liked and disliked simultaneously.
 - [ ] Search functionality implemented with advanced options. [Extra]
 - [ ] Interface is clear, well set out, and navigable. [Extra]
 - [ ] Intuitive content filtering. [Extra]

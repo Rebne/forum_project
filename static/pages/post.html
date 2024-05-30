@@ -6,7 +6,7 @@
   <main>
     <section id="content">
       <h2>{{.Title}}</h2>
-      <p>by {{.Username}} - {{.Date}}</p>
+      <p>by <a href="/profile/{{.Username}}">{{.Username}}</a> - {{.Date}}</p>
       <p>{{.Content}}</p>
       <p>Category: {{.Category}}</p>
       <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p>
