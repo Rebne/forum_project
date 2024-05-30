@@ -684,3 +684,50 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 	// Redirect the user back to the post detail page
 	http.Redirect(w, r, fmt.Sprintf("/post/%s", postID), http.StatusSeeOther)
 }
+
+func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodPost {
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		session, ok := sessions[cookie.Value]
+		if !ok {
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
+		}
+
+		userID := session.UserID
+		commentID := r.FormValue("comment_id")
+		postID := r.FormValue("post_id") // Assuming you have the post ID available
+		action := r.FormValue("action")
+
+		var isDislike int
+		if action == "like" {
+			isDislike = 0
+		} else if action == "dislike" {
+			isDislike = 1
+		} else {
+			http.Error(w, "Invalid action", http.StatusBadRequest)
+			return
+		}
+
+		// Insert or update like/dislike for the comment
+		_, err = db.Exec(`INSERT INTO comments_likes (users_id, comments_id, posts_id, is_dislike) VALUES (?, ?, ?, ?)
+            						ON CONFLICT(users_id, comments_id, posts_id) DO UPDATE SET is_dislike=excluded.is_dislike;`,
+			userID, commentID, postID, isDislike)
+		if err != nil {
+			// Log the error
+			log.Println("Failed to update like/dislike:", err)
+
+			// Return an internal server error response
+			http.Error(w, "Failed to update like/dislike", http.StatusInternalServerError)
+			return
+		}
+
+		// Redirect back to the page displaying the comment
+		http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
+	}
+}
