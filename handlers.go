@@ -595,10 +595,92 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	err = tmpl.ExecuteTemplate(w, "post.html", post)
+	// Define the fetchCommentsForPost function
+	fetchCommentsForPost := func(postID string) ([]Comment, error) {
+		var comments []Comment
+		// Query comments from the database based on the postID
+		rows, err := db.Query(`SELECT c.id, c.posts_id, c.content, c.date, c.users_id, u.username 
+							   FROM comments c
+							   JOIN users u ON c.users_id = u.id
+							   WHERE c.posts_id = ?`, postID)
+		if err != nil {
+			return nil, err
+		}
+		defer rows.Close()
+
+		// Iterate over the rows and scan each comment into a Comment struct
+		for rows.Next() {
+			var comment Comment
+			if err := rows.Scan(&comment.ID, &comment.PostID, &comment.Content, &comment.Date, &comment.UserID, &comment.Username); err != nil {
+				return nil, err
+			}
+			comments = append(comments, comment)
+		}
+		if err := rows.Err(); err != nil {
+			return nil, err
+		}
+
+		return comments, nil
+	}
+
+	// Fetch comments for the post
+	comments, err := fetchCommentsForPost(postID)
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)
 		return
 	}
+
+	// Combine post data and comments data into a single struct
+	data := struct {
+		Post     Post
+		Comments []Comment
+	}{
+		Post:     post,
+		Comments: comments,
+	}
+
+	err = tmpl.ExecuteTemplate(w, "post.html", data)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
+	// Parse the form data
+	err := r.ParseForm()
+	if err != nil {
+		http.Error(w, "Failed to parse form data", http.StatusInternalServerError)
+		return
+	}
+
+	// Extract data from the form
+	postID := r.Form.Get("post_id")
+	content := r.Form.Get("content")
+
+	// Retrieve the user ID from the session
+	cookie, err := r.Cookie("session_id")
+	if err != nil {
+		http.Error(w, "Session not found", http.StatusUnauthorized)
+		return
+	}
+	session, ok := sessions[cookie.Value]
+	if !ok {
+		http.Error(w, "Session not found", http.StatusUnauthorized)
+		return
+	}
+	userID := session.UserID
+
+	// Insert the comment into the database
+	_, err = db.Exec("INSERT INTO comments (posts_id, content, date, users_id) VALUES (?, ?, ?, ?)",
+		postID, content, time.Now(), userID)
+	if err != nil {
+		http.Error(w, "Failed to submit comment", http.StatusInternalServerError)
+		return
+	}
+
+	// Redirect the user back to the post detail page
+	http.Redirect(w, r, fmt.Sprintf("/post/%s", postID), http.StatusSeeOther)
 }

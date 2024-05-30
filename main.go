@@ -43,6 +43,16 @@ type Post struct {
 	Username string
 	Likes    int
 	Dislikes int
+	Comments []Comment
+}
+
+type Comment struct {
+	ID       int
+	PostID   int
+	Content  string
+	Date     string
+	UserID   int
+	Username string
 }
 
 type ProfileData struct {
@@ -93,6 +103,7 @@ func main() {
 	mux.HandleFunc("/post/", viewPostHandler)
 	mux.HandleFunc("/create_post", authenticate(createPostHandler))
 	mux.HandleFunc("/like_post", authenticate(likePostHandler))
+	mux.HandleFunc("/comment", authenticate(submitCommentHandler))
 	mux.HandleFunc("/updatebio", authenticate(updateBioHandler))
 
 	http.Handle("/", mux)
