@@ -595,23 +595,24 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
-	// Define the fetchCommentsForPost function
 	fetchCommentsForPost := func(postID string) ([]Comment, error) {
 		var comments []Comment
-		// Query comments from the database based on the postID
-		rows, err := db.Query(`SELECT c.id, c.posts_id, c.content, c.date, c.users_id, u.username 
-							   FROM comments c
-							   JOIN users u ON c.users_id = u.id
-							   WHERE c.posts_id = ?`, postID)
+		rows, err := db.Query(`SELECT c.id, c.posts_id, c.content, c.date, c.users_id, u.username,
+                               COALESCE(SUM(CASE WHEN cl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
+                               COALESCE(SUM(CASE WHEN cl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
+                               FROM comments c
+                               JOIN users u ON c.users_id = u.id
+                               LEFT JOIN comments_likes cl ON c.id = cl.comments_id
+                               WHERE c.posts_id = ?
+                               GROUP BY c.id, c.posts_id, c.content, c.date, c.users_id, u.username`, postID)
 		if err != nil {
 			return nil, err
 		}
 		defer rows.Close()
 
-		// Iterate over the rows and scan each comment into a Comment struct
 		for rows.Next() {
 			var comment Comment
-			if err := rows.Scan(&comment.ID, &comment.PostID, &comment.Content, &comment.Date, &comment.UserID, &comment.Username); err != nil {
+			if err := rows.Scan(&comment.ID, &comment.PostID, &comment.Content, &comment.Date, &comment.UserID, &comment.Username, &comment.Likes, &comment.Dislikes); err != nil {
 				return nil, err
 			}
 			comments = append(comments, comment)
@@ -623,7 +624,6 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 		return comments, nil
 	}
 
-	// Fetch comments for the post
 	comments, err := fetchCommentsForPost(postID)
 	if err != nil {
 		log.Println(err)
@@ -631,7 +631,6 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Combine post data and comments data into a single struct
 	data := struct {
 		Post     Post
 		Comments []Comment

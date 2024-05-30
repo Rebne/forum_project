@@ -23,21 +23,15 @@
           
           <!-- Like/Dislike Form -->
           <form action="/like_comment" method="POST">
-              <input type="hidden" name="comment_id" value="{{ .ID }}">
-              <input type="hidden" name="post_id" value="{{ .PostID }}">
-              <input type="hidden" name="action" value="like">
-              <button type="submit">Like</button>
-          </form>
-          <form action="/like_comment" method="POST">
-              <input type="hidden" name="comment_id" value="{{ .ID }}">
-              <input type="hidden" name="post_id" value="{{ .PostID }}">
-              <input type="hidden" name="action" value="dislike">
-              <button type="submit">Dislike</button>
-          </form>
-      </div>
+            <input type="hidden" name="post_id" value="{{$.Post.ID}}">
+            <input type="hidden" name="comment_id" value="{{.ID}}">
+            <button type="submit" name="action" value="like">Like</button>
+            <button type="submit" name="action" value="dislike">Dislike</button>
+        </form>
+    </div>
       {{end}}
       <h3>Add Comment</h3>
-      <form action="/submit-comment" method="post">
+      <form action="/comment" method="post">
         <input type="hidden" name="post_id" value="{{.Post.ID}}">
         <textarea name="content" rows="4" cols="50" required></textarea><br>
         <input type="submit" value="Submit">
