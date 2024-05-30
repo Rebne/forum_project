@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+{{template "Head"}}
+<body>
+  {{template "Header"}}
+  <main>
+    <section id="content">
+      <h2>{{.Title}}</h2>
+      <p>by {{.Username}} - {{.Date}}</p>
+      <p>{{.Content}}</p>
+      <p>Category: {{.Category}}</p>
+      <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; Literary Lions 2024</p>
+  </footer>
+</body>
+</html>

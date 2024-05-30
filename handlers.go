@@ -27,14 +27,12 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 
 	userID := session.UserID
 
-	// Fetch user's bio
 	var bio string
 	err = db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
 	if err != nil && err != sql.ErrNoRows {
 		log.Fatal(err)
 	}
 
-	// Fetch user's created posts
 	rows, err := db.Query("SELECT id, users_id, title, content, category, date FROM posts WHERE users_id = ?", userID)
 	if err != nil {
 		log.Fatal(err)
@@ -51,7 +49,6 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		createdPosts = append(createdPosts, post)
 	}
 
-	// Fetch user's liked posts
 	likedRows, err := db.Query(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date
                                 FROM posts p
                                 JOIN posts_likes pl ON p.id = pl.posts_id
@@ -71,7 +68,6 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		likedPosts = append(likedPosts, post)
 	}
 
-	// Construct the ProfileData struct
 	profileData := ProfileData{
 		Username:     session.Username,
 		Bio:          bio,
@@ -79,7 +75,80 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		LikedPosts:   likedPosts,
 	}
 
-	// Render the profile.html template with the ProfileData
+	err = tmpl.ExecuteTemplate(w, "profile.html", profileData)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func profileViewHandler(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/profile/")
+	if path == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	username := path
+
+	var userID int
+	err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID)
+	if err == sql.ErrNoRows {
+		http.NotFound(w, r)
+		return
+	} else if err != nil {
+		log.Fatal(err)
+	}
+
+	var bio string
+	err = db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
+	if err != nil && err != sql.ErrNoRows {
+		log.Fatal(err)
+	}
+
+	rows, err := db.Query("SELECT id, users_id, title, content, category, date FROM posts WHERE users_id = ?", userID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var createdPosts []Post
+	for rows.Next() {
+		var post Post
+		err = rows.Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date)
+		if err != nil {
+			log.Fatal(err)
+		}
+		createdPosts = append(createdPosts, post)
+	}
+
+	likedRows, err := db.Query(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date
+                                FROM posts p
+                                JOIN posts_likes pl ON p.id = pl.posts_id
+                                WHERE pl.users_id = ? AND pl.is_dislike = 0`, userID)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer likedRows.Close()
+
+	var likedPosts []Post
+	for likedRows.Next() {
+		var post Post
+		err = likedRows.Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date)
+		if err != nil {
+			log.Fatal(err)
+		}
+		likedPosts = append(likedPosts, post)
+	}
+
+	profileData := ProfileData{
+		Username:     username,
+		Bio:          bio,
+		CreatedPosts: createdPosts,
+		LikedPosts:   likedPosts,
+	}
+
 	err = tmpl.ExecuteTemplate(w, "profile.html", profileData)
 	if err != nil {
 		log.Println(err)
@@ -497,5 +566,39 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		http.Redirect(w, r, "/", http.StatusSeeOther)
+	}
+}
+
+func viewPostHandler(w http.ResponseWriter, r *http.Request) {
+	path := strings.TrimPrefix(r.URL.Path, "/post/")
+	if path == "" {
+		http.NotFound(w, r)
+		return
+	}
+
+	postID := path
+
+	var post Post
+	err := db.QueryRow(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date, u.username,
+                        COALESCE(SUM(CASE WHEN pl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
+                        COALESCE(SUM(CASE WHEN pl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
+                        FROM posts p
+                        JOIN users u ON p.users_id = u.id
+                        LEFT JOIN posts_likes pl ON p.id = pl.posts_id
+                        WHERE p.id = ?
+                        GROUP BY p.id, p.users_id, p.title, p.content, p.category, p.date, u.username`, postID).
+		Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date, &post.Username, &post.Likes, &post.Dislikes)
+	if err == sql.ErrNoRows {
+		http.NotFound(w, r)
+		return
+	} else if err != nil {
+		log.Fatal(err)
+	}
+
+	err = tmpl.ExecuteTemplate(w, "post.html", post)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 }

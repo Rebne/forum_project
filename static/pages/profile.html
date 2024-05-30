@@ -18,7 +18,7 @@
         <h3>Posts by {{.Username}}</h3>
         <ul id="user-posts">
           {{range .CreatedPosts}}
-          <li>{{.Title}} - {{.Date}}</li>
+          <li><a href="/post/{{.ID}}">{{.Title}}</a> - {{.Date}}</li>
           {{end}}
         </ul>
       </div>
@@ -26,7 +26,7 @@
         <h3>Posts Liked by {{.Username}}</h3>
         <ul id="liked-posts">
           {{range .LikedPosts}}
-          <li>{{.Title}} - {{.Date}}</li>
+          <li><a href="/post/{{.ID}}">{{.Title}}</a> - {{.Date}}</li>
           {{end}}
         </ul>
       </div>
