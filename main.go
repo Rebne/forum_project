@@ -127,7 +127,6 @@ func generateSessionID() string {
 	return base64.StdEncoding.EncodeToString(b)
 }
 
-// middleware
 func authenticate(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		cookie, err := r.Cookie("session_id")
@@ -139,20 +138,14 @@ func authenticate(next http.HandlerFunc) http.HandlerFunc {
 		sessionID := cookie.Value
 		_, ok := sessions[sessionID]
 		if !ok {
-			// FIXME: FOR DEVELOPMENT
-
-			sessions[sessionID] = Session{UserID: 2}
-			// Set the session ID in a cookie
-			http.SetCookie(w, cookie)
-			// http.Redirect(w, r, "/login", http.StatusSeeOther)
-			// return
+			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			return
 		}
 
 		// Set session data in request context
 		next.ServeHTTP(w, r)
 	}
 }
-
 func renderTemplate(w http.ResponseWriter, title string, data any) {
 
 	err := tmpl.ExecuteTemplate(w, fmt.Sprintf("%s.html", title), data)
