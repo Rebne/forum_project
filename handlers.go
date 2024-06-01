@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -30,12 +29,14 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 	var bio string
 	err = db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
 	if err != nil && err != sql.ErrNoRows {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 
 	rows, err := db.Query("SELECT id, users_id, title, content, category, date FROM posts WHERE users_id = ?", userID)
 	if err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 	defer rows.Close()
 
@@ -44,7 +45,7 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		var post Post
 		err = rows.Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date)
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
 		}
 		createdPosts = append(createdPosts, post)
 	}
@@ -54,7 +55,8 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
                                 JOIN posts_likes pl ON p.id = pl.posts_id
                                 WHERE pl.users_id = ? AND pl.is_dislike = 0`, userID)
 	if err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 	defer likedRows.Close()
 
@@ -63,7 +65,8 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		var post Post
 		err = likedRows.Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date)
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 		likedPosts = append(likedPosts, post)
 	}
@@ -84,9 +87,10 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func profileViewHandler(w http.ResponseWriter, r *http.Request) {
+
 	path := strings.TrimPrefix(r.URL.Path, "/profile/")
 	if path == "" {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -95,21 +99,24 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 	var userID int
 	err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID)
 	if err == sql.ErrNoRows {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	} else if err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 
 	var bio string
 	err = db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
 	if err != nil && err != sql.ErrNoRows {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 
 	rows, err := db.Query("SELECT id, users_id, title, content, category, date FROM posts WHERE users_id = ?", userID)
 	if err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 	defer rows.Close()
 
@@ -118,7 +125,8 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 		var post Post
 		err = rows.Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date)
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 		createdPosts = append(createdPosts, post)
 	}
@@ -128,7 +136,8 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
                                 JOIN posts_likes pl ON p.id = pl.posts_id
                                 WHERE pl.users_id = ? AND pl.is_dislike = 0`, userID)
 	if err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 	defer likedRows.Close()
 
@@ -137,7 +146,8 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 		var post Post
 		err = likedRows.Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date)
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 		likedPosts = append(likedPosts, post)
 	}
@@ -151,8 +161,7 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = tmpl.ExecuteTemplate(w, "profile_view.html", profileData)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 }
@@ -165,14 +174,14 @@ func updateBioHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the session ID from the user's cookie
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
-		http.Error(w, "Session not found", http.StatusUnauthorized)
+		clientError(w, http.StatusUnauthorized)
 		return
 	}
 
 	// Retrieve the userID from the session
 	session, ok := sessions[cookie.Value]
 	if !ok {
-		http.Error(w, "Session not found", http.StatusUnauthorized)
+		clientError(w, http.StatusUnauthorized)
 		return
 	}
 	userID := session.UserID
@@ -180,7 +189,7 @@ func updateBioHandler(w http.ResponseWriter, r *http.Request) {
 	// Begin transaction
 	tx, err := db.Begin()
 	if err != nil {
-		http.Error(w, "Failed to begin transaction", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 
@@ -189,14 +198,15 @@ func updateBioHandler(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		// Rollback transaction if an error occurs
 		tx.Rollback()
-		http.Error(w, "Failed to update bio", http.StatusInternalServerError)
+
+		serverError(w, err)
 		return
 	}
 
 	// Commit transaction
 	err = tx.Commit()
 	if err != nil {
-		http.Error(w, "Failed to commit transaction", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 
@@ -216,7 +226,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	rows, err := db.Query("SELECT * FROM posts WHERE title LIKE '%' || ? || '%' OR content LIKE '%' || ? || '%';", searchInput, searchInput)
 
 	if err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 	defer rows.Close()
 
@@ -231,8 +242,6 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 			log.Fatal(err)
 		}
 
-		//TODO: Reformat date
-
 		db.QueryRow("SELECT username FROM users WHERE id = ?;", user_id).Scan(&tmp.Username)
 		tmp.Date = date[:len(date)-10]
 		Posts = append(Posts, tmp)
@@ -241,7 +250,8 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 
 	content := PageContent{Posts: Posts}
@@ -253,8 +263,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 }
@@ -276,7 +285,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
                            LEFT JOIN posts_likes pl ON p.id = pl.posts_id
                            GROUP BY p.id, p.users_id, p.title, p.content, p.category, p.date, u.username;`)
 	if err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 	defer rows.Close()
 
@@ -285,13 +295,15 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		tmp := Post{}
 		err = rows.Scan(&tmp.ID, &tmp.User_id, &tmp.Title, &tmp.Content, &tmp.Category, &tmp.Date, &tmp.Username, &tmp.Likes, &tmp.Dislikes)
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 		Posts = append(Posts, tmp)
 	}
 
 	if err = rows.Err(); err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 
 	// Pass authentication status along with posts when rendering the template
@@ -307,8 +319,7 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 }
@@ -321,7 +332,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Failed to parse register form", http.StatusInternalServerError)
+			serverError(w, err)
 			return
 		}
 
@@ -329,6 +340,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
 
+		// on falid checkForValidInput generates error with empty body to be able to check for return
 		err = checkForValidInput(w, username, password, email)
 		if err != nil {
 			return
@@ -336,7 +348,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 		stmtForCheck, err := db.Prepare("SELECT username FROM users WHERE username = ?;")
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 		defer stmtForCheck.Close()
 
@@ -344,16 +357,17 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		var emailExists string
 		err = stmtForCheck.QueryRow(username).Scan(&userExists)
 		if err != nil && err != sql.ErrNoRows {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 		err = stmtForCheck.QueryRow(password).Scan(&emailExists)
 		if err != nil && err != sql.ErrNoRows {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 
-		// TODO: Have to differentiate errorMessages and usual Messages
-
 		if userExists != "" || emailExists != "" {
+			w.WriteHeader(http.StatusBadRequest)
 			renderTemplate(w, "register", "Username or email is already taken")
 			return
 		}
@@ -361,27 +375,29 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		// Password encrypted for security
 		blob, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 
 		stmtForAddUser, err := db.Prepare("INSERT INTO users (username, email, date_created, password) VALUES (?,?,?,?);")
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 
 		defer stmtForAddUser.Close()
 		timestamp := time.Now().Format(time.DateTime)
 		_, err = stmtForAddUser.Exec(username, email, timestamp, blob)
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 
 		renderTemplate(w, "login", fmt.Sprintf("New user %s created", strings.ToUpper(username)))
 		return
 
 	} else {
-		err := errors.New("incorrect HTTP request received")
-		log.Fatal(err)
+		clientError(w, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -389,8 +405,7 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		err := tmpl.ExecuteTemplate(w, "create_post.html", "")
 		if err != nil {
-			log.Println(err)
-			http.Error(w, "internal server error", http.StatusInternalServerError)
+			serverError(w, err)
 			return
 		}
 	} else if r.Method == http.MethodPost {
@@ -402,6 +417,7 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate post data
 		if title == "" || content == "" || category == "" {
+			w.WriteHeader(http.StatusNotAcceptable)
 			renderTemplate(w, "create_post",
 				"Title, content, and category are required fields")
 			return
@@ -410,20 +426,21 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		// Let's assume the user is already authenticated and we have their user ID in the session
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 
 		session, ok := sessions[cookie.Value]
 		if !ok {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 
 		userID := session.UserID
 		// Insert the post into the database
 		stmt, err := db.Prepare("INSERT INTO posts (users_id, title, content, category, date) VALUES (?, ?, ?, ?, ?);")
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			log.Println("Error preparing SQL statement:", err)
+			serverError(w, err)
 			return
 		}
 
@@ -432,15 +449,14 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		timestamp := time.Now().Format(time.DateTime)
 		_, err = stmt.Exec(userID, title, content, category, timestamp)
 		if err != nil {
-			http.Error(w, "Internal Server Error", http.StatusInternalServerError)
-			log.Println("Error executing SQL statement:", err)
+			serverError(w, err)
 			return
 		}
 
 		// Redirect the user to the home page or display a success message
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 	} else {
-		http.Error(w, "Method Not Allowed", http.StatusMethodNotAllowed)
+		clientError(w, http.StatusMethodNotAllowed)
 		return
 	}
 }
@@ -451,29 +467,33 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			http.Error(w, "Failed to parse login form", http.StatusInternalServerError)
+			serverError(w, err)
 			return
 		}
 		usernameOrEmail := r.Form.Get("username")
 		passwordFromForm := r.Form.Get("password")
 
 		if usernameOrEmail == "" && passwordFromForm == "" {
+			w.WriteHeader(http.StatusBadRequest)
 			renderTemplate(w, "login", "You have to enter a username and password")
 			return
 		}
 
 		if usernameOrEmail == "" {
+			w.WriteHeader(http.StatusBadRequest)
 			renderTemplate(w, "login", "Username field was empty")
 			return
 		}
 		if passwordFromForm == "" {
+			w.WriteHeader(http.StatusBadRequest)
 			renderTemplate(w, "login", "Password field was empty")
 			return
 		}
 
 		stmtForCheck, err := db.Prepare("SELECT id, username, password FROM users WHERE username = ? OR email = ?;")
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
 		defer stmtForCheck.Close()
 
@@ -484,15 +504,18 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		err = stmtForCheck.QueryRow(usernameOrEmail, usernameOrEmail).Scan(&userID, &username, &password)
 		if err != nil {
 			if err == sql.ErrNoRows {
+				w.WriteHeader(http.StatusNotAcceptable)
 				renderTemplate(w, "login", "User does not exist")
 				return
 			} else {
-				log.Fatal(err)
+				serverError(w, err)
+				return
 			}
 		}
 
 		err = bcrypt.CompareHashAndPassword(password, []byte(passwordFromForm))
 		if err != nil {
+			w.WriteHeader(http.StatusNotAcceptable)
 			renderTemplate(w, "login", "Wrong password entered")
 			return
 		}
@@ -512,8 +535,8 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	} else {
-		err := errors.New("incorrect HTTP request received")
-		log.Fatal(err)
+		clientError(w, http.StatusMethodNotAllowed)
+		return
 	}
 }
 
@@ -532,13 +555,13 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		cookie, err := r.Cookie("session_id")
 		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			serverError(w, err)
 			return
 		}
 
 		session, ok := sessions[cookie.Value]
 		if !ok {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
+			serverError(w, err)
 			return
 		}
 
@@ -552,7 +575,7 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 		} else if action == "dislike" {
 			isDislike = 1
 		} else {
-			http.Error(w, "Invalid action", http.StatusBadRequest)
+			clientError(w, http.StatusBadRequest)
 			return
 		}
 
@@ -561,7 +584,7 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
                           ON CONFLICT(users_id, posts_id) DO UPDATE SET is_dislike=excluded.is_dislike;`,
 			userID, postID, isDislike)
 		if err != nil {
-			http.Error(w, "Failed to update like/dislike", http.StatusInternalServerError)
+			serverError(w, err)
 			return
 		}
 
@@ -572,7 +595,7 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 	path := strings.TrimPrefix(r.URL.Path, "/post/")
 	if path == "" {
-		http.NotFound(w, r)
+		notFound(w)
 		return
 	}
 
@@ -589,10 +612,11 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
                         GROUP BY p.id, p.users_id, p.title, p.content, p.category, p.date, u.username`, postID).
 		Scan(&post.ID, &post.User_id, &post.Title, &post.Content, &post.Category, &post.Date, &post.Username, &post.Likes, &post.Dislikes)
 	if err == sql.ErrNoRows {
-		http.NotFound(w, r)
+		clientError(w, http.StatusBadRequest)
 		return
 	} else if err != nil {
-		log.Fatal(err)
+		serverError(w, err)
+		return
 	}
 
 	fetchCommentsForPost := func(postID string) ([]Comment, error) {
@@ -626,8 +650,7 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	comments, err := fetchCommentsForPost(postID)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 
@@ -641,8 +664,7 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 
 	err = tmpl.ExecuteTemplate(w, "post.html", data)
 	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 }
@@ -651,7 +673,7 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the form data
 	err := r.ParseForm()
 	if err != nil {
-		http.Error(w, "Failed to parse form data", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 
@@ -662,12 +684,12 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 	// Retrieve the user ID from the session
 	cookie, err := r.Cookie("session_id")
 	if err != nil {
-		http.Error(w, "Session not found", http.StatusUnauthorized)
+		clientError(w, http.StatusUnauthorized)
 		return
 	}
 	session, ok := sessions[cookie.Value]
 	if !ok {
-		http.Error(w, "Session not found", http.StatusUnauthorized)
+		clientError(w, http.StatusUnauthorized)
 		return
 	}
 	userID := session.UserID
@@ -676,7 +698,7 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 	_, err = db.Exec("INSERT INTO comments (posts_id, content, date, users_id) VALUES (?, ?, ?, ?)",
 		postID, content, time.Now(), userID)
 	if err != nil {
-		http.Error(w, "Failed to submit comment", http.StatusInternalServerError)
+		serverError(w, err)
 		return
 	}
 
@@ -709,7 +731,7 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 		} else if action == "dislike" {
 			isDislike = 1
 		} else {
-			http.Error(w, "Invalid action", http.StatusBadRequest)
+			clientError(w, http.StatusBadRequest)
 			return
 		}
 
@@ -718,11 +740,7 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
             						ON CONFLICT(users_id, comments_id, posts_id) DO UPDATE SET is_dislike=excluded.is_dislike;`,
 			userID, commentID, postID, isDislike)
 		if err != nil {
-			// Log the error
-			log.Println("Failed to update like/dislike:", err)
-
-			// Return an internal server error response
-			http.Error(w, "Failed to update like/dislike", http.StatusInternalServerError)
+			serverError(w, err)
 			return
 		}
 

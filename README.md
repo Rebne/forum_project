@@ -5,6 +5,8 @@
 - [ ] Comment functionality
 - [x] Like/Vote functionality
 - [x] Thread pages
+- [ ] Fix likes in code-database logic handlers.go -> line 579
+- [ ] Delete redundant check for user authentication for example handlers.go -> line 706
 
 
 ### General
