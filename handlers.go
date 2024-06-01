@@ -201,7 +201,7 @@ func updateBioHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Redirect the user back to their profile page
-	http.Redirect(w, r, "/profile", http.StatusCreated)
+	http.Redirect(w, r, "/profile", http.StatusSeeOther)
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -428,7 +428,7 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Redirect the user to the home page or display a success message
-		http.Redirect(w, r, "/", http.StatusCreated)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
 		return
@@ -501,7 +501,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 			Secure:   true,
 		})
-		http.Redirect(w, r, "/", http.StatusCreated)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 		return
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
@@ -517,7 +517,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Redirect the user to the login page or any other appropriate page after logout
-	http.Redirect(w, r, "/", http.StatusOK)
+	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
 func likePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -557,7 +557,7 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/", http.StatusCreated)
+		http.Redirect(w, r, "/", http.StatusSeeOther)
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
 	}
@@ -672,7 +672,7 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Redirect the user back to the post detail page
-		http.Redirect(w, r, fmt.Sprintf("/post/%s", postID), http.StatusCreated)
+		http.Redirect(w, r, fmt.Sprintf("/post/%s", postID), http.StatusSeeOther)
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
 	}
@@ -717,7 +717,7 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Redirect back to the page displaying the comment
-		http.Redirect(w, r, "/post/"+postID, http.StatusCreated)
+		http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
 	}

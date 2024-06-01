@@ -16,7 +16,7 @@
 ### Site functionality
 - [x] Sessions implemented for user persistence. (Cookies)
 - [ ] Multiple browser sessions function correctly.
-- [ ] Empty posts and comments not allowed.
+- [x] Empty posts and comments not allowed.
 - [ ] Posts can be filtered by category.
 - [x] Number of likes and dislikes for comments visible to all users.
 - [x] Number of likes and dislikes displayed and updated correctly.
@@ -56,7 +56,7 @@
 - [x] Users have access to profile pages. [Extra]
 
 ### Error Handling
-- [ ] Server uses appropriate HTTP response codes (2XX)
+- [x] Server uses appropriate HTTP response codes (2XX)
 - [x] Server uses appropriate HTTP respince code for (4XX)
 - [x] All pages function correctly (no unhandled 404 errors).
 - [x] Project handles HTTP status 400 and 500 errors gracefully.
