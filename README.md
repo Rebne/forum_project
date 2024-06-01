@@ -18,7 +18,7 @@
 - [ ] Multiple browser sessions function correctly.
 - [ ] Empty posts and comments not allowed.
 - [ ] Posts can be filtered by category.
-- [ ] Number of likes and dislikes for comments visible to all users.
+- [x] Number of likes and dislikes for comments visible to all users.
 - [x] Number of likes and dislikes displayed and updated correctly.
 - [x] Posts cannot be liked and disliked simultaneously.
 - [ ] Search functionality implemented with advanced options. [Extra]
@@ -34,8 +34,8 @@
 - [x] Code uses at least one INSERT query.
 - [x] User registration data stored in the database.
 - [x] Posts stored in the database.
-- [ ] Comments stored in the database.
-- [ ] SQL queries effective and efficient. [Extra]
+- [x] Comments stored in the database.
+- [x] SQL queries effective and efficient. [Extra]
 - [ ] Update README with new ERD image
 
 ### Registration and login
@@ -51,16 +51,17 @@
 ### User Interaction
 - [x] Only registered users can create posts and comments.
 - [x] Posts can be associated with categories.
-- [ ] Only registered users can like or dislike posts and comments.
-- [ ] Registered users can view their created and liked posts.
+- [x] Only registered users can like or dislike posts and comments.
+- [x] Registered users can view their created and liked posts.
 - [x] Users have access to profile pages. [Extra]
 
 ### Error Handling
-- [ ] Server uses appropriate HTTP response codes (2XX, 4XX).
-- [ ] All pages function correctly (no unhandled 404 errors).
-- [ ] Project handles HTTP status 400 and 500 errors gracefully.
-- [ ] Interface handles 5XX HTTP response codes gracefully.
-- [ ] Server behaves as expected (no crashes).
+- [ ] Server uses appropriate HTTP response codes (2XX)
+- [x] Server uses appropriate HTTP respince code for (4XX)
+- [x] All pages function correctly (no unhandled 404 errors).
+- [x] Project handles HTTP status 400 and 500 errors gracefully.
+- [x] Interface handles 5XX HTTP response codes gracefully.
+- [ ] Server behaves as expected (no crashes). - have to check for Database concurrency
 - [ ] Informative and user-friendly error messages. [Extra]
 
 ### Docker Integration
