@@ -201,7 +201,7 @@ func updateBioHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Redirect the user back to their profile page
-	http.Redirect(w, r, "/profile", http.StatusSeeOther)
+	http.Redirect(w, r, "/profile", http.StatusCreated)
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
@@ -428,7 +428,7 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Redirect the user to the home page or display a success message
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusCreated)
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
 		return
@@ -501,7 +501,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 			HttpOnly: true,
 			Secure:   true,
 		})
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusCreated)
 		return
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
@@ -517,7 +517,7 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 	})
 
 	// Redirect the user to the login page or any other appropriate page after logout
-	http.Redirect(w, r, "/", http.StatusSeeOther)
+	http.Redirect(w, r, "/", http.StatusOK)
 }
 
 func likePostHandler(w http.ResponseWriter, r *http.Request) {
@@ -557,7 +557,9 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		http.Redirect(w, r, "/", http.StatusSeeOther)
+		http.Redirect(w, r, "/", http.StatusCreated)
+	} else {
+		clientError(w, http.StatusMethodNotAllowed)
 	}
 }
 
@@ -635,40 +637,45 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
-	// Parse the form data
-	err := r.ParseForm()
-	if err != nil {
-		serverError(w, err)
-		return
-	}
+	if r.Method == http.MethodPost {
 
-	// Extract data from the form
-	postID := r.Form.Get("post_id")
-	content := r.Form.Get("content")
+		// Parse the form data
+		err := r.ParseForm()
+		if err != nil {
+			serverError(w, err)
+			return
+		}
 
-	// Retrieve the user ID from the session
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		clientError(w, http.StatusUnauthorized)
-		return
-	}
-	session, ok := sessions[cookie.Value]
-	if !ok {
-		clientError(w, http.StatusUnauthorized)
-		return
-	}
-	userID := session.UserID
+		// Extract data from the form
+		postID := r.Form.Get("post_id")
+		content := r.Form.Get("content")
 
-	// Insert the comment into the database
-	_, err = db.Exec("INSERT INTO comments (posts_id, content, date, users_id) VALUES (?, ?, ?, ?)",
-		postID, content, time.Now(), userID)
-	if err != nil {
-		serverError(w, err)
-		return
-	}
+		// Retrieve the user ID from the session
+		cookie, err := r.Cookie("session_id")
+		if err != nil {
+			clientError(w, http.StatusUnauthorized)
+			return
+		}
+		session, ok := sessions[cookie.Value]
+		if !ok {
+			clientError(w, http.StatusUnauthorized)
+			return
+		}
+		userID := session.UserID
 
-	// Redirect the user back to the post detail page
-	http.Redirect(w, r, fmt.Sprintf("/post/%s", postID), http.StatusSeeOther)
+		// Insert the comment into the database
+		_, err = db.Exec("INSERT INTO comments (posts_id, content, date, users_id) VALUES (?, ?, ?, ?)",
+			postID, content, time.Now(), userID)
+		if err != nil {
+			serverError(w, err)
+			return
+		}
+
+		// Redirect the user back to the post detail page
+		http.Redirect(w, r, fmt.Sprintf("/post/%s", postID), http.StatusCreated)
+	} else {
+		clientError(w, http.StatusMethodNotAllowed)
+	}
 }
 
 func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
@@ -710,6 +717,8 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Redirect back to the page displaying the comment
-		http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
+		http.Redirect(w, r, "/post/"+postID, http.StatusCreated)
+	} else {
+		clientError(w, http.StatusMethodNotAllowed)
 	}
 }
