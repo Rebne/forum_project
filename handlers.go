@@ -78,12 +78,7 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 		LikedPosts:   likedPosts,
 	}
 
-	err = tmpl.ExecuteTemplate(w, "profile.html", profileData)
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
+	renderTemplate(w, "profile", profileData, http.StatusOK)
 }
 
 func profileViewHandler(w http.ResponseWriter, r *http.Request) {
@@ -158,12 +153,7 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 		CreatedPosts: createdPosts,
 		LikedPosts:   likedPosts,
 	}
-
-	err = tmpl.ExecuteTemplate(w, "profile_view.html", profileData)
-	if err != nil {
-		serverError(w, err)
-		return
-	}
+	renderTemplate(w, "profile_view", profileData, http.StatusOK)
 }
 
 func updateBioHandler(w http.ResponseWriter, r *http.Request) {
@@ -257,14 +247,9 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	content := PageContent{Posts: Posts}
 
 	if isAuthenticated {
-		err = tmpl.ExecuteTemplate(w, "protected.html", content)
+		renderTemplate(w, "protected", content, http.StatusOK)
 	} else {
-		err = tmpl.ExecuteTemplate(w, "index.html", content)
-	}
-
-	if err != nil {
-		serverError(w, err)
-		return
+		renderTemplate(w, "index", content, http.StatusOK)
 	}
 }
 
@@ -313,21 +298,16 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if isAuthenticated {
-		err = tmpl.ExecuteTemplate(w, "protected.html", content)
+		renderTemplate(w, "protected", content, http.StatusOK)
 	} else {
-		err = tmpl.ExecuteTemplate(w, "index.html", content)
-	}
-
-	if err != nil {
-		serverError(w, err)
-		return
+		renderTemplate(w, "index", content, http.StatusOK)
 	}
 }
 
 func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodGet {
-		renderTemplate(w, "register", "")
+		renderTemplate(w, "register", nil, http.StatusOK)
 
 	} else if r.Method == http.MethodPost {
 		err := r.ParseForm()
@@ -367,8 +347,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if userExists != "" || emailExists != "" {
-			w.WriteHeader(http.StatusBadRequest)
-			renderTemplate(w, "register", "Username or email is already taken")
+			renderTemplate(w, "register", "Username or email is already taken", http.StatusBadRequest)
 			return
 		}
 
@@ -393,7 +372,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		renderTemplate(w, "login", fmt.Sprintf("New user %s created", strings.ToUpper(username)))
+		renderTemplate(w, "login", fmt.Sprintf("New user %s created", strings.ToUpper(username)), http.StatusCreated)
 		return
 
 	} else {
@@ -403,11 +382,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		err := tmpl.ExecuteTemplate(w, "create_post.html", "")
-		if err != nil {
-			serverError(w, err)
-			return
-		}
+		renderTemplate(w, "create_post", nil, http.StatusOK)
 	} else if r.Method == http.MethodPost {
 
 		// Extract post data from the form
@@ -417,9 +392,8 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		// Validate post data
 		if title == "" || content == "" || category == "" {
-			w.WriteHeader(http.StatusNotAcceptable)
 			renderTemplate(w, "create_post",
-				"Title, content, and category are required fields")
+				"Title, content, and category are required fields", http.StatusNotAcceptable)
 			return
 		}
 
@@ -463,7 +437,7 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
-		renderTemplate(w, "login", "")
+		renderTemplate(w, "login", nil, http.StatusOK)
 	} else if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
@@ -474,19 +448,16 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		passwordFromForm := r.Form.Get("password")
 
 		if usernameOrEmail == "" && passwordFromForm == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			renderTemplate(w, "login", "You have to enter a username and password")
+			renderTemplate(w, "login", "You have to enter a username and password", http.StatusBadRequest)
 			return
 		}
 
 		if usernameOrEmail == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			renderTemplate(w, "login", "Username field was empty")
+			renderTemplate(w, "login", "Username field was empty", http.StatusBadRequest)
 			return
 		}
 		if passwordFromForm == "" {
-			w.WriteHeader(http.StatusBadRequest)
-			renderTemplate(w, "login", "Password field was empty")
+			renderTemplate(w, "login", "Password field was empty", http.StatusBadRequest)
 			return
 		}
 
@@ -504,8 +475,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		err = stmtForCheck.QueryRow(usernameOrEmail, usernameOrEmail).Scan(&userID, &username, &password)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				w.WriteHeader(http.StatusNotAcceptable)
-				renderTemplate(w, "login", "User does not exist")
+				renderTemplate(w, "login", "User does not exist", http.StatusBadRequest)
 				return
 			} else {
 				serverError(w, err)
@@ -515,8 +485,7 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 
 		err = bcrypt.CompareHashAndPassword(password, []byte(passwordFromForm))
 		if err != nil {
-			w.WriteHeader(http.StatusNotAcceptable)
-			renderTemplate(w, "login", "Wrong password entered")
+			renderTemplate(w, "login", "Wrong password entered", http.StatusBadRequest)
 			return
 		}
 
@@ -662,11 +631,7 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 		Comments: comments,
 	}
 
-	err = tmpl.ExecuteTemplate(w, "post.html", data)
-	if err != nil {
-		serverError(w, err)
-		return
-	}
+	renderTemplate(w, "post", data, http.StatusOK)
 }
 
 func submitCommentHandler(w http.ResponseWriter, r *http.Request) {

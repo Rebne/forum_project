@@ -146,8 +146,8 @@ func authenticate(next http.HandlerFunc) http.HandlerFunc {
 		next.ServeHTTP(w, r)
 	}
 }
-func renderTemplate(w http.ResponseWriter, title string, data any) {
-
+func renderTemplate(w http.ResponseWriter, title string, data any, statusCode int) {
+	w.WriteHeader(statusCode)
 	err := tmpl.ExecuteTemplate(w, fmt.Sprintf("%s.html", title), data)
 	if err != nil {
 		serverError(w, err)
@@ -157,20 +157,17 @@ func renderTemplate(w http.ResponseWriter, title string, data any) {
 
 func checkForValidInput(w http.ResponseWriter, username, password, email string) error {
 	if len(password) < 8 {
-		w.WriteHeader(http.StatusNotAcceptable)
-		renderTemplate(w, "register", "Password has to be at least 8 characters")
+		renderTemplate(w, "register", "Password has to be at least 8 characters", http.StatusNotAcceptable)
 		return errors.New("")
 	}
 
 	if !isValidEmail(email) {
-		w.WriteHeader(http.StatusNotAcceptable)
-		renderTemplate(w, "register", "Please enter a correct email")
+		renderTemplate(w, "register", "Please enter a correct email", http.StatusNotAcceptable)
 		return errors.New("")
 	}
 
 	if email == "" || username == "" || password == "" {
-		w.WriteHeader(http.StatusNotAcceptable)
-		renderTemplate(w, "register", "Please fill in all the fields to register successfully")
+		renderTemplate(w, "register", "Please fill in all the fields to register successfully", http.StatusNotAcceptable)
 		return errors.New("")
 	}
 	return nil
