@@ -419,32 +419,38 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type userFormData struct {
+	Username    string
+	Email       string
+	Password    string
+	FieldErrors map[string]string
+}
+
 func loginHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		renderTemplate(w, "login", nil, http.StatusOK)
 	} else if r.Method == http.MethodPost {
+
 		err := r.ParseForm()
 		if err != nil {
 			clientError(w, http.StatusBadRequest)
 			return
 		}
+
 		usernameOrEmail := r.Form.Get("username")
 		passwordFromForm := r.Form.Get("password")
 
-		// FIXME: HERE!!
-
-		if usernameOrEmail == "" && passwordFromForm == "" {
-			renderTemplate(w, "login", "You have to enter a username and password", http.StatusBadRequest)
-			return
+		data := userFormData{
+			Username:    usernameOrEmail,
+			Password:    passwordFromForm,
+			FieldErrors: make(map[string]string),
 		}
 
 		if usernameOrEmail == "" {
-			renderTemplate(w, "login", "Username field was empty", http.StatusBadRequest)
-			return
+			data.FieldErrors["username"] = "Username field was empty"
 		}
 		if passwordFromForm == "" {
-			renderTemplate(w, "login", "Password field was empty", http.StatusBadRequest)
-			return
+			data.FieldErrors["password"] = "Password field was empty"
 		}
 
 		stmtForCheck, err := db.Prepare("SELECT id, username, password FROM users WHERE username = ? OR email = ?;")
@@ -461,17 +467,28 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 		err = stmtForCheck.QueryRow(usernameOrEmail, usernameOrEmail).Scan(&userID, &username, &password)
 		if err != nil {
 			if err == sql.ErrNoRows {
-				renderTemplate(w, "login", "User does not exist", http.StatusBadRequest)
-				return
+				data.FieldErrors["password"] = "Wrong username or password"
+				//do nothing
 			} else {
 				serverError(w, err)
 				return
 			}
 		}
 
-		err = bcrypt.CompareHashAndPassword(password, []byte(passwordFromForm))
-		if err != nil {
-			renderTemplate(w, "login", "Wrong password entered", http.StatusBadRequest)
+		// if password field is not empty
+		if _, ok := data.FieldErrors["password"]; !ok {
+			// checking the validity of the password
+			err = bcrypt.CompareHashAndPassword(password, []byte(passwordFromForm))
+			if err != nil {
+				data.FieldErrors["password"] = "Wrong username or password"
+			}
+		}
+
+		if len(data.FieldErrors) > 0 {
+			if _, ok := data.FieldErrors["username"]; !ok && username != "" {
+				data.FieldErrors["password"] = "Wrong username or password"
+			}
+			renderTemplate(w, "login", data, http.StatusUnprocessableEntity)
 			return
 		}
 
