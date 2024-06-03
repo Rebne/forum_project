@@ -7,19 +7,24 @@
     <h1>Register</h1>
     <form action="/register" method="POST">
         <label for="email">Email:</label><br>
-        <input type="text" id="email" name="email"><br>
+        <input type="text" id="email" name="email" value="{{.Email}}"><br>
+        {{with .FieldErrors.email}}
+            <label class="error">{{.}}</label><br>
+        {{end}}
         <label for="username">Username:</label><br>
-        <input type="text" id="username" name="username"><br>
+        <input type="text" id="username" name="username" value="{{.Username}}"><br>
+        {{with .FieldErrors.username}}
+            <label class="error">{{.}}</label><br>
+        {{end}}
         <label for="password">Password:</label><br>
         <input type="password" id="password" name="password"><br><br>
+        {{with .FieldErrors.password}}
+            <label class="error">{{.}}</label><br>
+        {{end}}
         <input type="submit" value="Submit">
     </form>
     <div style="padding: 8px;"></div>
     <a href="/login" method="POST">Already have an account?</a>
     <div style="padding: 8px;"></div>
     
-    {{if .}}
-    <p>{{.}}</p>
-    {{end}}
-
 </body>

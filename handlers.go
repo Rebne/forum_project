@@ -305,34 +305,25 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		username := r.Form.Get("username")
 		password := r.Form.Get("password")
 
-		// on falid checkForValidInput generates error with empty body to be able to check for return
-		err = checkForValidInput(w, username, password, email)
-		if err != nil {
+		errors := checkForValidInput(w, username, password, email)
+		// errors == nil mean servererror() was called
+		if errors == nil {
 			return
 		}
 
-		stmtForCheck, err := db.Prepare("SELECT username FROM users WHERE username = ?;")
-		if err != nil {
-			serverError(w, err)
-			return
-		}
-		defer stmtForCheck.Close()
-
-		var userExists string
-		var emailExists string
-		err = stmtForCheck.QueryRow(username).Scan(&userExists)
-		if err != nil && err != sql.ErrNoRows {
-			serverError(w, err)
-			return
-		}
-		err = stmtForCheck.QueryRow(password).Scan(&emailExists)
-		if err != nil && err != sql.ErrNoRows {
-			serverError(w, err)
-			return
+		data := userFormData{
+			FieldErrors: errors,
 		}
 
-		if userExists != "" || emailExists != "" {
-			renderTemplate(w, "register", "Username or email is already taken", http.StatusBadRequest)
+		if _, ok := data.FieldErrors["username"]; !ok {
+			data.Username = username
+		}
+		if _, ok := data.FieldErrors["email"]; !ok {
+			data.Email = email
+		}
+
+		if len(data.FieldErrors) > 0 {
+			renderTemplate(w, "register", data, http.StatusUnprocessableEntity)
 			return
 		}
 

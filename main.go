@@ -4,7 +4,6 @@ import (
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/gob"
-	"errors"
 	"fmt"
 	"html/template"
 	"log"
@@ -155,22 +154,54 @@ func renderTemplate(w http.ResponseWriter, title string, data any, statusCode in
 	}
 }
 
-func checkForValidInput(w http.ResponseWriter, username, password, email string) error {
+func checkForValidInput(w http.ResponseWriter, username, password, email string) map[string]string {
+	errors := make(map[string]string)
+
 	if len(password) < 8 {
-		renderTemplate(w, "register", "Password has to be at least 8 characters", http.StatusNotAcceptable)
-		return errors.New("")
+		errors["password"] = "Password has to be at keast 8 characters"
 	}
-
 	if !isValidEmail(email) {
-		renderTemplate(w, "register", "Please enter a correct email", http.StatusNotAcceptable)
-		return errors.New("")
+		errors["email"] = "Please enter a correct email"
+	}
+	if email == "" {
+		errors["email"] = "Email field required"
+	}
+	if username == "" {
+		errors["username"] = "Username field required"
+	}
+	if password == "" {
+		errors["password"] = "Password field required"
 	}
 
-	if email == "" || username == "" || password == "" {
-		renderTemplate(w, "register", "Please fill in all the fields to register successfully", http.StatusNotAcceptable)
-		return errors.New("")
+	stmtForCheck, err := db.Prepare("SELECT username FROM users WHERE username = ?;")
+	if err != nil {
+		serverError(w, err)
+		return nil
 	}
-	return nil
+	defer stmtForCheck.Close()
+
+	var userExists string
+	var emailExists string
+	err = stmtForCheck.QueryRow(username).Scan(&userExists)
+	if err != nil && err != sql.ErrNoRows {
+		serverError(w, err)
+		return nil
+	}
+	err = stmtForCheck.QueryRow(password).Scan(&emailExists)
+	if err != nil && err != sql.ErrNoRows {
+		serverError(w, err)
+		return nil
+	}
+
+	if userExists != "" {
+		errors["username"] = "Username is already taken"
+	}
+
+	if emailExists != "" {
+		errors["email"] = "Email is already taken"
+	}
+
+	return errors
 }
 
 func isValidEmail(email string) bool {
