@@ -12,22 +12,14 @@ import (
 )
 
 func profileHandler(w http.ResponseWriter, r *http.Request) {
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
+	cookie, _ := r.Cookie("session_id")
 
-	session, ok := sessions[cookie.Value]
-	if !ok {
-		http.Redirect(w, r, "/login", http.StatusSeeOther)
-		return
-	}
+	session := sessions[cookie.Value]
 
 	userID := session.UserID
 
 	var bio string
-	err = db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
+	err := db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
 	if err != nil && err != sql.ErrNoRows {
 		serverError(w, err)
 		return
@@ -162,18 +154,11 @@ func updateBioHandler(w http.ResponseWriter, r *http.Request) {
 	bio := r.Form.Get("bio")
 
 	// Retrieve the session ID from the user's cookie
-	cookie, err := r.Cookie("session_id")
-	if err != nil {
-		clientError(w, http.StatusUnauthorized)
-		return
-	}
+	cookie, _ := r.Cookie("session_id")
 
 	// Retrieve the userID from the session
-	session, ok := sessions[cookie.Value]
-	if !ok {
-		clientError(w, http.StatusUnauthorized)
-		return
-	}
+	session := sessions[cookie.Value]
+
 	userID := session.UserID
 
 	// Begin transaction
@@ -312,7 +297,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			serverError(w, err)
+			clientError(w, http.StatusBadRequest)
 			return
 		}
 
@@ -384,7 +369,6 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		renderTemplate(w, "create_post", nil, http.StatusOK)
 	} else if r.Method == http.MethodPost {
-
 		// Extract post data from the form
 		title := r.FormValue("title")
 		content := r.FormValue("content")
@@ -441,11 +425,13 @@ func loginHandler(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodPost {
 		err := r.ParseForm()
 		if err != nil {
-			serverError(w, err)
+			clientError(w, http.StatusBadRequest)
 			return
 		}
 		usernameOrEmail := r.Form.Get("username")
 		passwordFromForm := r.Form.Get("password")
+
+		// FIXME: HERE!!
 
 		if usernameOrEmail == "" && passwordFromForm == "" {
 			renderTemplate(w, "login", "You have to enter a username and password", http.StatusBadRequest)
@@ -522,17 +508,9 @@ func logoutHandler(w http.ResponseWriter, r *http.Request) {
 
 func likePostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		cookie, err := r.Cookie("session_id")
-		if err != nil {
-			serverError(w, err)
-			return
-		}
+		cookie, _ := r.Cookie("session_id")
 
-		session, ok := sessions[cookie.Value]
-		if !ok {
-			serverError(w, err)
-			return
-		}
+		session := sessions[cookie.Value]
 
 		userID := session.UserID
 		postID := r.FormValue("post_id")
@@ -549,7 +527,7 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert or update like/dislike
-		_, err = db.Exec(`INSERT INTO posts_likes (users_id, posts_id, is_dislike) VALUES (?, ?, ?)
+		_, err := db.Exec(`INSERT INTO posts_likes (users_id, posts_id, is_dislike) VALUES (?, ?, ?)
                           ON CONFLICT(users_id, posts_id) DO UPDATE SET is_dislike=excluded.is_dislike;`,
 			userID, postID, isDislike)
 		if err != nil {
@@ -680,17 +658,9 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 
 func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
-		cookie, err := r.Cookie("session_id")
-		if err != nil {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
+		cookie, _ := r.Cookie("session_id")
 
-		session, ok := sessions[cookie.Value]
-		if !ok {
-			http.Redirect(w, r, "/login", http.StatusSeeOther)
-			return
-		}
+		session := sessions[cookie.Value]
 
 		userID := session.UserID
 		commentID := r.FormValue("comment_id")
@@ -708,7 +678,7 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert or update like/dislike for the comment
-		_, err = db.Exec(`INSERT INTO comments_likes (users_id, comments_id, posts_id, is_dislike) VALUES (?, ?, ?, ?)
+		_, err := db.Exec(`INSERT INTO comments_likes (users_id, comments_id, posts_id, is_dislike) VALUES (?, ?, ?, ?)
             						ON CONFLICT(users_id, comments_id, posts_id) DO UPDATE SET is_dislike=excluded.is_dislike;`,
 			userID, commentID, postID, isDislike)
 		if err != nil {

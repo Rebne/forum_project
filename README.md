@@ -2,7 +2,7 @@
 
 - [ ] Category filtering (connected with search)
 - [ ] Complete profile page
-- [ ] Comment functionality
+- [x] Comment functionality
 - [x] Like/Vote functionality
 - [x] Thread pages
 - [ ] Fix likes in code-database logic handlers.go -> line 579
