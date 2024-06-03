@@ -356,6 +356,13 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+type postDataForm struct {
+	Title       string
+	Content     string
+	Category    string
+	FieldErrors map[string]string
+}
+
 func createPostHandler(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodGet {
 		renderTemplate(w, "create_post", nil, http.StatusOK)
@@ -366,6 +373,32 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		category := r.FormValue("category")
 
 		// Validate post data
+
+		data := postDataForm{
+			FieldErrors: make(map[string]string),
+		}
+		if title == "" {
+			data.FieldErrors["title"] = "Title is required"
+		}
+		if content == "" {
+			data.FieldErrors["content"] = "Content is required"
+		}
+		if category == "" {
+			data.FieldErrors["category"] = "Category is required"
+		}
+
+		if len(data.FieldErrors) > 0 {
+			if _, ok := data.FieldErrors["title"]; !ok {
+				data.Title = title
+			}
+			if _, ok := data.FieldErrors["content"]; !ok {
+				data.Content = content
+			}
+			if _, ok := data.FieldErrors["category"]; !ok {
+				data.Category = category
+			}
+			renderTemplate(w, "create_post", data, http.StatusUnprocessableEntity)
+		}
 		if title == "" || content == "" || category == "" {
 			renderTemplate(w, "create_post",
 				"Title, content, and category are required fields", http.StatusNotAcceptable)
