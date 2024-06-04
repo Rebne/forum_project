@@ -398,10 +398,6 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 				data.Category = category
 			}
 			renderTemplate(w, "create_post", data, http.StatusUnprocessableEntity)
-		}
-		if title == "" || content == "" || category == "" {
-			renderTemplate(w, "create_post",
-				"Title, content, and category are required fields", http.StatusNotAcceptable)
 			return
 		}
 
