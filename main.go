@@ -90,6 +90,7 @@ func main() {
 
 	gob.Register(&User{})
 
+	port := "3000"
 	var err error
 
 	mux := http.NewServeMux()
@@ -110,8 +111,8 @@ func main() {
 
 	http.Handle("/", mux)
 
-	log.Print("Listening...")
-	err = http.ListenAndServe(":3000", nil)
+	log.Printf("Listening on port %s", port)
+	err = http.ListenAndServe(":"+port, nil)
 	if err != nil {
 		log.Fatal(err)
 	}
