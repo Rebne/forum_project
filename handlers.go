@@ -690,8 +690,9 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 		// Insert the comment into the database
 		mu.Lock()
 		defer mu.Unlock()
+		timestamp := time.Now().Format(time.DateTime)
 		_, err = db.Exec("INSERT INTO comments (posts_id, content, date, users_id) VALUES (?, ?, ?, ?)",
-			postID, content, time.Now(), userID)
+			postID, content, timestamp, userID)
 		if err != nil {
 			serverError(w, err)
 			return
@@ -741,4 +742,15 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
 	}
+}
+
+func parseToNormalTimeFormat(w http.ResponseWriter, s string) string {
+	layout := time.RFC3339
+	t, err := time.Parse(layout, s)
+	if err != nil {
+		serverError(w, err)
+		return ""
+	}
+
+	return t.Format("2006-01-02 15:04")
 }
