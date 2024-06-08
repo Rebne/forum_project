@@ -341,7 +341,7 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		defer stmtForAddUser.Close()
-		timestamp := time.Now().Format(time.DateTime)
+		timestamp := time.Now()
 		mu.Lock()
 		defer mu.Unlock()
 		_, err = stmtForAddUser.Exec(username, email, timestamp, blob)
@@ -426,7 +426,7 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 
 		defer stmt.Close()
 
-		timestamp := time.Now().Format(time.DateTime)
+		timestamp := time.Now()
 		mu.Lock()
 		defer mu.Unlock()
 		_, err = stmt.Exec(userID, title, content, category, timestamp)
@@ -687,7 +687,7 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 		// Insert the comment into the database
 		mu.Lock()
 		defer mu.Unlock()
-		timestamp := time.Now().Format(time.DateTime)
+		timestamp := time.Now()
 		_, err = db.Exec("INSERT INTO comments (posts_id, content, date, users_id) VALUES (?, ?, ?, ?)",
 			postID, content, timestamp, userID)
 		if err != nil {
