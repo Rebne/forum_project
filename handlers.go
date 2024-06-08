@@ -6,10 +6,13 @@ import (
 	"log"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
 )
+
+var mu sync.Mutex
 
 func profileHandler(w http.ResponseWriter, r *http.Request) {
 	cookie, _ := r.Cookie("session_id")
@@ -342,6 +345,8 @@ func registerHandler(w http.ResponseWriter, r *http.Request) {
 
 		defer stmtForAddUser.Close()
 		timestamp := time.Now().Format(time.DateTime)
+		mu.Lock()
+		defer mu.Unlock()
 		_, err = stmtForAddUser.Exec(username, email, timestamp, blob)
 		if err != nil {
 			serverError(w, err)
@@ -425,6 +430,8 @@ func createPostHandler(w http.ResponseWriter, r *http.Request) {
 		defer stmt.Close()
 
 		timestamp := time.Now().Format(time.DateTime)
+		mu.Lock()
+		defer mu.Unlock()
 		_, err = stmt.Exec(userID, title, content, category, timestamp)
 		if err != nil {
 			serverError(w, err)
@@ -564,6 +571,8 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert or update like/dislike
+		mu.Lock()
+		defer mu.Unlock()
 		_, err := db.Exec(`INSERT INTO posts_likes (users_id, posts_id, is_dislike) VALUES (?, ?, ?)
                           ON CONFLICT(users_id, posts_id) DO UPDATE SET is_dislike=excluded.is_dislike;`,
 			userID, postID, isDislike)
@@ -679,6 +688,8 @@ func submitCommentHandler(w http.ResponseWriter, r *http.Request) {
 		userID := session.UserID
 
 		// Insert the comment into the database
+		mu.Lock()
+		defer mu.Unlock()
 		_, err = db.Exec("INSERT INTO comments (posts_id, content, date, users_id) VALUES (?, ?, ?, ?)",
 			postID, content, time.Now(), userID)
 		if err != nil {
@@ -715,6 +726,8 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		// Insert or update like/dislike for the comment
+		mu.Lock()
+		defer mu.Unlock()
 		_, err := db.Exec(`INSERT INTO comments_likes (users_id, comments_id, posts_id, is_dislike) VALUES (?, ?, ?, ?)
             						ON CONFLICT(users_id, comments_id, posts_id) DO UPDATE SET is_dislike=excluded.is_dislike;`,
 			userID, commentID, postID, isDislike)
