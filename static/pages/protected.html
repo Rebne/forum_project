@@ -22,8 +22,8 @@
           {{if $.IsAuthenticated}}
           <form action="/like_post" method="POST">
             <input type="hidden" name="post_id" value="{{.ID}}">
-            <button type="submit" name="action" value="like">Like</button>
-            <button type="submit" name="action" value="dislike">Dislike</button>
+            <button class="button click-button" type="submit" name="action" value="like">Like</button>
+            <button class="button click-button" type="submit" name="action" value="dislike">Dislike</button>
           </form>
           {{end}}
         </li>

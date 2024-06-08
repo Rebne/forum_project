@@ -1,28 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
 {{template "Head"}}
+
 <body>
-    <a href="/" method="GET">Home</a>
-    <div style="padding: 8px;"></div>
+{{template "Header"}}
+<aside class="bordered">
     <h2>Login</h2>
     <form action="/login" method="POST">
 
         <label for="username">Username or email:</label><br>
-        <input type="text" id="username" name="username"><br>
+        <input class="input-box white-box" type="text" id="username" name="username"><br>
         {{with .FieldErrors.username}}
-            <label class="error">{{.}}</label><br>
+        <label class="error">{{.}}</label><br>
         {{end}}
 
         <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password"><br><br>
+        <input class="input-box white-box" type="password" id="password" name="password"><br><br>
         {{with .FieldErrors.password}}
-            <label class="error">{{.}}</label><br>
+        <label class="error">{{.}}</label><br>
         {{end}}
-        <input type="submit" value="Submit">
+        <button class="button click-button" type="submit">Submit</button>
 
     </form>
     <div style="padding: 8px;"></div>
-    <a href="/register" method="POST">Register</a>
+     <div class="link-container click-button">
+      <a class="link" href="/register">Register</a>
+     </div>
     <div style="padding: 8px;"></div>
-    
+</aside>
 </body>

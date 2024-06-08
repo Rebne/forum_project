@@ -204,18 +204,21 @@ select:focus {
 }
 
 
-.search-button {
+.button {
   padding: 5px 10px;
   background-color: white;
   border: 1px solid black;
 }
 
+.white-box {
+  background-color: white;
+}
 .click-button:active {
   transition: transform 0.02s;
   transform: translateY(2px);
 }
 
-.search-button:active {
+.button:active {
   box-shadow: 0 0 0 1.5px black;
 }
 
