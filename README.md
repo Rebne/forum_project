@@ -6,7 +6,7 @@
 - [x] Like/Vote functionality
 - [x] Thread pages
 - [ ] Fix likes in code-database logic handlers.go -> line 579
-- [ ] Delete redundant check for user authentication for example handlers.go -> line 706
+- [x] Delete redundant check for user authentication for example handlers.go -> line 706
 
 
 ### General
@@ -15,17 +15,17 @@
 
 ### Site functionality
 - [x] Sessions implemented for user persistence. (Cookies)
-- [ ] Multiple browser sessions function correctly.
+- [x] Multiple browser sessions function correctly.
 - [x] Empty posts and comments not allowed.
 - [ ] Posts can be filtered by category.
 - [x] Number of likes and dislikes for comments visible to all users.
 - [x] Number of likes and dislikes displayed and updated correctly.
 - [x] Posts cannot be liked and disliked simultaneously.
 - [ ] Search functionality implemented with advanced options. [Extra]
-- [ ] Interface is clear, well set out, and navigable. [Extra]
+- [x] Interface is clear, well set out, and navigable. [Extra]
 - [ ] Intuitive content filtering. [Extra]
 - [ ] Categories effective in organizing discussions. [Extra]
-- [ ] Easy to respond to posts and comments. [Extra]
+- [x] Easy to respond to posts and comments. [Extra]
 
 ### SQLite
 - [x] Database designed with an Entity Relationship Diagram (ERD).
@@ -61,8 +61,8 @@
 - [x] All pages function correctly (no unhandled 404 errors).
 - [x] Project handles HTTP status 400 and 500 errors gracefully.
 - [x] Interface handles 5XX HTTP response codes gracefully.
-- [ ] Server behaves as expected (no crashes). - have to check for Database concurrency
-- [ ] Informative and user-friendly error messages. [Extra]
+- [x] Server behaves as expected (no crashes). - have to check for Database concurrency
+- [x] Informative and user-friendly error messages. [Extra]
 
 ### Docker Integration
 - [ ] Docker image can be built successfully using Dockerfile.

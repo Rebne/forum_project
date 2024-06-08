@@ -1,13 +1,19 @@
 {{define "HeaderSignedOut"}}
 <header>
-    <h1><a href="#">Literary Lions</a></h1>
+    <h1><a href="#">Literary Lions</a></h1> 
     <nav>
-      <ul>
-        <li><a href="/">Home</a></li>
-        <li><a href="#">Categories</a></li>
-        <li><a href="#">About</a></li>
-        <li><a href="/login">Login/Signup</a></li>
-      </ul>
+    <div class="link-container nav click-button">
+      <a class="link header-element" href="/">Home</a>
+    </div>
+    <div class="link-container nav click-button">
+      <a class="link header-element" href="#">Categories</a>
+    </div>
+    <div class="link-container nav click-button">
+      <a class="link header-element" href="#">About</a>
+    </div>
+    <div class="link-container nav click-button">
+      <a class="link header-element" href="/login">Login/Signup</a>
+    </div>
     </nav>
   </header>
 {{end}}
