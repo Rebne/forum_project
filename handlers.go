@@ -212,19 +212,16 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	Posts := []Post{}
 	var user_id int
 	var id int
-	var date string
 	for rows.Next() {
 		tmp := Post{}
-		err = rows.Scan(&id, &user_id, &tmp.Title, &tmp.Content, &tmp.Category, &date)
+		err = rows.Scan(&id, &user_id, &tmp.Title, &tmp.Content, &tmp.Category, &tmp.Date)
 		if err != nil {
 			log.Fatal(err)
 		}
 
 		db.QueryRow("SELECT username FROM users WHERE id = ?;", user_id).Scan(&tmp.Username)
-		tmp.Date = date[:len(date)-10]
 		Posts = append(Posts, tmp)
 
-		// fmt.Printf("%d, %s, %s, %s, %s, %s\n", id, tmp.Username, tmp.Title, tmp.Content, tmp.Category, tmp.Date)
 	}
 
 	if err = rows.Err(); err != nil {
@@ -742,15 +739,4 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
 	}
-}
-
-func parseToNormalTimeFormat(w http.ResponseWriter, s string) string {
-	layout := time.RFC3339
-	t, err := time.Parse(layout, s)
-	if err != nil {
-		serverError(w, err)
-		return ""
-	}
-
-	return t.Format("2006-01-02 15:04")
 }

@@ -9,6 +9,7 @@ import (
 	"log"
 	"net/http"
 	"regexp"
+	"time"
 
 	"database/sql"
 
@@ -38,7 +39,7 @@ type Post struct {
 	Title    string
 	Content  string
 	Category string
-	Date     string
+	Date     time.Time
 	Username string
 	Likes    int
 	Dislikes int
@@ -49,7 +50,7 @@ type Comment struct {
 	ID       int
 	PostID   int
 	Content  string
-	Date     string
+	Date     time.Time
 	UserID   int
 	Username string
 	Likes    int
@@ -71,7 +72,10 @@ var db *sql.DB
 func init() {
 
 	var err error
-	tmpl, err = template.ParseGlob("static/**/*.html")
+	funcmap := template.FuncMap{
+		"formatDate": formatDate,
+	}
+	tmpl, err = template.New("all").Funcs(funcmap).ParseGlob("static/**/*.html")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -90,7 +94,7 @@ func main() {
 
 	gob.Register(&User{})
 
-	port := "3000"
+	port := "5000"
 	var err error
 
 	mux := http.NewServeMux()
@@ -211,4 +215,9 @@ func isValidEmail(email string) bool {
 	regex := regexp.MustCompile(pattern)
 
 	return regex.MatchString(email)
+}
+
+func formatDate(t time.Time) string {
+	result := t.Format(time.DateTime)
+	return result[:len(result)-3]
 }

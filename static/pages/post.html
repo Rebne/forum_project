@@ -10,7 +10,7 @@
   <main>
     <section id="content">
       <h2>{{.Post.Title}}</h2>
-      <p>by <a href="/profile/{{.Post.Username}}">{{.Post.Username}}</a> - {{.Post.Date}}</p>
+      <p>by <a href="/profile/{{.Post.Username}}">{{.Post.Username}}</a> - {{formatDate .Post.Date}}</p>
       <p>{{.Post.Content}}</p>
       <p>Category: {{.Post.Category}}</p>
       <p>Likes: {{.Post.Likes}} Dislikes: {{.Post.Dislikes}}</p>
@@ -18,7 +18,7 @@
       {{range .Comments}}
       <div class="thread-item">
           <p>{{ .Content }}</p>
-          <p>by <a href="/profile/{{ .Username }}">{{ .Username }}</a> - {{ .Date }}</p>
+          <p>by <a href="/profile/{{ .Username }}">{{ .Username }}</a> - {{formatDate .Date}}</p>
           <p>Likes: {{ .Likes }} Dislikes: {{ .Dislikes }}</p>
           
           <!-- Like/Dislike Form -->
