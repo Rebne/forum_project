@@ -1,30 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 {{template "Head"}}
+
 <body>
-    <a href="/" method="GET">Home</a>
-    <div style="padding: 8px;"></div>
-    <h1>Register</h1>
-    <form action="/register" method="POST">
-        <label for="email">Email:</label><br>
-        <input type="text" id="email" name="email" value="{{.Email}}"><br>
-        {{with .FieldErrors.email}}
+    {{template "HeaderSignedOut"}}
+    <aside class="bordered">
+        <h2>Register</h2>
+        <form action="/register" method="POST">
+            <label for="email">Email:</label><br>
+            <input class="input-box white-box" type="text" id="email" name="email" value="{{.Email}}"><br>
+            {{with .FieldErrors.email}}
             <label class="error">{{.}}</label><br>
-        {{end}}
-        <label for="username">Username:</label><br>
-        <input type="text" id="username" name="username" value="{{.Username}}"><br>
-        {{with .FieldErrors.username}}
+            {{end}}
+            <label for="username">Username:</label><br>
+            <input class="input-box white-box" type="text" id="username" name="username" value="{{.Username}}"><br>
+            {{with .FieldErrors.username}}
             <label class="error">{{.}}</label><br>
-        {{end}}
-        <label for="password">Password:</label><br>
-        <input type="password" id="password" name="password"><br><br>
-        {{with .FieldErrors.password}}
+            {{end}}
+            <label for="password">Password:</label><br>
+            <input class="input-box white-box" type="password" id="password" name="password"><br><br>
+            {{with .FieldErrors.password}}
             <label class="error">{{.}}</label><br>
-        {{end}}
-        <input type="submit" value="Submit">
-    </form>
-    <div style="padding: 8px;"></div>
-    <a href="/login" method="POST">Already have an account?</a>
-    <div style="padding: 8px;"></div>
-    
+            {{end}}
+            <button class="button click-button" type="submit">Submit</button>
+        </form>
+        <div style="padding: 8px;"></div>
+        <div class="link-container click-button">
+            <a class="link" href="/login">Already have an account?</a>
+        </div>
+        <div style="padding: 8px;"></div>
+    </aside>
+    {{template "Footer"}}
 </body>

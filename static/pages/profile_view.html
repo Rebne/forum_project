@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 {{template "Head"}}
+
 <body>
   {{template "Header"}}
   <main>
@@ -9,7 +10,7 @@
       <p>{{.Username}}</p>
       <div id="bio-section">
         <h3>Bio</h3>
-          <textarea id="bio" name="bio" rows="4" cols="50" readonly>{{.Bio}}</textarea>
+        <textarea id="bio" name="bio" rows="4" cols="50" readonly>{{.Bio}}</textarea>
       </div>
       <div id="posts-section">
         <h3>Posts by {{.Username}}</h3>
@@ -29,8 +30,7 @@
       </div>
     </section>
   </main>
-  <footer>
-    <p>&copy; Literary Lions 2024</p>
-  </footer>
+  {{template "Footer"}}
 </body>
+
 </html>

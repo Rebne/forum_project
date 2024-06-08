@@ -267,3 +267,7 @@ section h2 {
 .vote__down.active {
   color: #0079d3;
 }
+
+.copyright {
+  margin-left: 10px;
+}
