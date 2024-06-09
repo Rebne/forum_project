@@ -1,22 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
 {{template "Head"}}
+
 <body>
-{{template "Header"}}
+  {{template "Header"}}
   <main>
-    <section id="content">
+    <aside class="bordered" id="content">
       <h2>Categories</h2>
-      <ul class="category-list">
+      <ul>
         {{range .Categories}}
-        <li class="category-item">
-          <a href="/?category={{.}}">{{.}}</a>
+        <li class="category-list-item">
+          <div class="link-container click-button">
+            <a class="link" href="/?category={{.}}">{{.}}</a><br>
+          </div>
         </li>
         {{end}}
       </ul>
-    </section>
+    </aside>
   </main>
-  <footer>
-    <p>&copy; Literary Lions 2024</p>
-  </footer>
+  {{template "Footer"}}
 </body>
+
 </html>

@@ -279,3 +279,24 @@ section h2 {
   border: 1px solid black;
   box-sizing: border-box;
 }
+
+.filter-form:focus {
+  border-color: black;
+  box-shadow: 0 0 0 1.5px black;
+}
+
+#search-category {
+  font-size: 16px;
+  color: #746d68;
+}
+
+#about {
+  width: 36%;
+  display: flex;
+  flex-direction: column;
+}
+
+.category-list-item {
+  font-size: 16px;
+  margin-bottom: 5px;
+}
