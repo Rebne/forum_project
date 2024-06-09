@@ -8,20 +8,26 @@
         <aside id="create-post-form" class="bordered">
             <h2>Create a New Post</h2>
             <form action="/create_post" method="post">
-                <input class="input-box create-post-input" placeholder="title" type="text" id="title" name="title"
-                    value="{{.Title}}"><br>
+                <input class="input-box create-post-input" placeholder="title" type="text" id="title" name="title" value="{{.Title}}"><br>
                 {{with .FieldErrors.title}}
                 <label class="error">{{.}}</label><br>
                 {{end}}
 
-                <textarea class="input-box create-post-input" placeholder="content" id="content"
-                    name="content">{{.Content}}</textarea><br>
+                <textarea class="input-box create-post-input" placeholder="content" id="content" name="content">{{.Content}}</textarea><br>
                 {{with .FieldErrors.content}}
                 <label class="error">{{.}}</label><br>
                 {{end}}
 
-                <input class="input-box create-post-input" placeholder="category" type="text" id="category"
-                    name="category" value="{{.Category}}"><br>
+                <select class="input-box create-post-input" id="category" name="category">
+                    <option value="">Select a category</option>
+                    <option value="Specific Books" {{if eq .Category "Specific Books"}}selected{{end}}>Specific Books</option>
+                    <option value="In-depth" {{if eq .Category "In-depth"}}selected{{end}}>In-depth</option>
+                    <option value="Character Study" {{if eq .Category "Character Study"}}selected{{end}}>Character Study</option>
+                    <option value="Interviews" {{if eq .Category "Interviews"}}selected{{end}}>Interviews</option>
+                    <option value="Fiction" {{if eq .Category "Fiction"}}selected{{end}}>Fiction</option>
+                    <option value="Biography" {{if eq .Category "Biography"}}selected{{end}}>Biography</option>
+                    <option value="Discussion" {{if eq .Category "Discussion"}}selected{{end}}>Discussion</option>
+                </select><br>
                 {{with .FieldErrors.category}}
                 <label class="error">{{.}}</label><br>
                 {{end}}
