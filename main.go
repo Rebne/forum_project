@@ -114,6 +114,7 @@ func main() {
 	mux.HandleFunc("/comment", authenticate(submitCommentHandler))
 	mux.HandleFunc("/like_comment", authenticate(likeCommentHandler))
 	mux.HandleFunc("/updatebio", authenticate(updateBioHandler))
+	mux.HandleFunc("/categories", categoriesHandler)
 
 	http.Handle("/", mux)
 

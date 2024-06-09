@@ -779,3 +779,33 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 		clientError(w, http.StatusMethodNotAllowed)
 	}
 }
+
+func categoriesHandler(w http.ResponseWriter, r *http.Request) {
+	// Query to get the list of categories
+	rows, err := db.Query("SELECT DISTINCT category FROM posts")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var categories []string
+	for rows.Next() {
+		var category string
+		if err := rows.Scan(&category); err != nil {
+			log.Fatal(err)
+		}
+		categories = append(categories, category)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Pass categories to the template
+	err = tmpl.ExecuteTemplate(w, "categories.html", struct{ Categories []string }{Categories: categories})
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+}
