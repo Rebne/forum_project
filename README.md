@@ -1,7 +1,7 @@
 ## TODO
 
 - [ ] Category filtering (connected with search)
-- [ ] Complete profile page
+- [x] Complete profile page
 - [x] Comment functionality
 - [x] Like/Vote functionality
 - [x] Thread pages
@@ -64,9 +64,9 @@
 - [x] Informative and user-friendly error messages. [Extra]
 
 ### Docker Integration
-- [ ] Docker image can be built successfully using Dockerfile.
-- [ ] Container runs successfully using created image.
-- [ ] Project has no unused Docker objects.
+- [x] Docker image can be built successfully using Dockerfile.
+- [x] Container runs successfully using created image.
+- [x] Project has no unused Docker objects.
 
 <img src="ERD.png" width="80%" height="80%">
 

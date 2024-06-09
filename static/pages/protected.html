@@ -7,6 +7,16 @@
     {{template "Searchbar"}}
     <section id="content">
       <h2>Latest Threads</h2>
+      <form method="GET" action="/">
+        <label for="category-filter">Filter by Category:</label>
+        <select id="category-filter" name="category">
+          <option value="">All</option>
+          {{range .Categories}}
+            <option value="{{.}}" {{if eq . $.SelectedCategory}}selected{{end}}>{{.}}</option>
+          {{end}}
+        </select>
+        <button type="submit">Apply</button>
+      </form>
       <ul class="thread-list">
         {{range .Posts}}
         <div>
