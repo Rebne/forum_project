@@ -293,7 +293,18 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Query to get the list of categories
+	// Hard-coded categories
+	hardcodedCategories := []string{
+		"Specific Books",
+		"In-depth",
+		"Character Study",
+		"Interviews",
+		"Fiction",
+		"Biography",
+		"Discussion",
+	}
+
+	// Query to get the list of categories from the database
 	categoryRows, err := db.Query("SELECT DISTINCT category FROM posts")
 	if err != nil {
 		log.Fatal(err)
@@ -313,10 +324,24 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	// Merge hardcoded and dynamically fetched categories, removing duplicates
+	categorySet := make(map[string]struct{})
+	for _, category := range hardcodedCategories {
+		categorySet[category] = struct{}{}
+	}
+	for _, category := range categories {
+		categorySet[category] = struct{}{}
+	}
+
+	mergedCategories := make([]string, 0, len(categorySet))
+	for category := range categorySet {
+		mergedCategories = append(mergedCategories, category)
+	}
+
 	// Pass authentication status, posts, categories, and selected category when rendering the template
 	content := PageContent{
 		Posts:            Posts,
-		Categories:       categories,
+		Categories:       mergedCategories,
 		SelectedCategory: selectedCategory,
 		IsAuthenticated:  isAuthenticated,
 	}
@@ -781,7 +806,18 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func categoriesHandler(w http.ResponseWriter, r *http.Request) {
-	// Query to get the list of categories
+	// Hard-coded categories
+	hardcodedCategories := []string{
+		"Specific Books",
+		"In-depth",
+		"Character Study",
+		"Interviews",
+		"Fiction",
+		"Biography",
+		"Discussion",
+	}
+
+	// Query to get the list of categories from the database
 	rows, err := db.Query("SELECT DISTINCT category FROM posts")
 	if err != nil {
 		log.Fatal(err)
@@ -801,8 +837,22 @@ func categoriesHandler(w http.ResponseWriter, r *http.Request) {
 		log.Fatal(err)
 	}
 
+	// Merge hardcoded and dynamically fetched categories, removing duplicates
+	categorySet := make(map[string]struct{})
+	for _, category := range hardcodedCategories {
+		categorySet[category] = struct{}{}
+	}
+	for _, category := range categories {
+		categorySet[category] = struct{}{}
+	}
+
+	mergedCategories := make([]string, 0, len(categorySet))
+	for category := range categorySet {
+		mergedCategories = append(mergedCategories, category)
+	}
+
 	// Pass categories to the template
-	err = tmpl.ExecuteTemplate(w, "categories.html", struct{ Categories []string }{Categories: categories})
+	err = tmpl.ExecuteTemplate(w, "categories.html", struct{ Categories []string }{Categories: mergedCategories})
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

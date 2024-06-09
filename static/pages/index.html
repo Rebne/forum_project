@@ -11,15 +11,20 @@
         <label for="category-filter">Filter by Category:</label>
         <select id="category-filter" name="category">
           <option value="">All</option>
-          {{range .Categories}}
-            <option value="{{.}}" {{if eq . $.SelectedCategory}}selected{{end}}>{{.}}</option>
-          {{end}}
+          <option value="Specific Books" {{if eq .SelectedCategory "Specific Books"}}selected{{end}}>Specific Books</option>
+          <option value="In-depth" {{if eq .SelectedCategory "In-depth"}}selected{{end}}>In-depth</option>
+          <option value="Character Study" {{if eq .SelectedCategory "Character Study"}}selected{{end}}>Character Study</option>
+          <option value="Interviews" {{if eq .SelectedCategory "Interviews"}}selected{{end}}>Interviews</option>
+          <option value="Fiction" {{if eq .SelectedCategory "Fiction"}}selected{{end}}>Fiction</option>
+          <option value="Biography" {{if eq .SelectedCategory "Biography"}}selected{{end}}>Biography</option>
+          <option value="Discussion" {{if eq .SelectedCategory "Discussion"}}selected{{end}}>Discussion</option>
         </select>
         <button type="submit">Apply</button>
       </form>
       <ul class="thread-list">
-        {{range .Posts}}
-        <div>
+        {{if .Posts}}
+          {{range .Posts}}
+          <div>
             <li class="thread-item">
               <div class="link-container click-button">
                 <a class="link thread-title" href="/post/{{.ID}}">{{.Title}}</a>
@@ -29,7 +34,10 @@
               <p>{{.Category}}</p>
               <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p>
             </li>
-        </div>
+          </div>
+          {{end}}
+        {{else}}
+          <p>No posts available for this category.</p>
         {{end}}
       </ul>
       <p>Please <a href="/login">login</a> or <a href="/register">register</a> to create posts.</p>
