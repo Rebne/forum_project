@@ -29,8 +29,7 @@ type Session struct {
 }
 
 type PageContent struct {
-	Posts           []Post
-	IsAuthenticated bool
+	Posts []Post
 }
 
 type Post struct {

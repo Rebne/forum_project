@@ -271,3 +271,13 @@ section h2 {
 .copyright {
   margin-left: 10px;
 }
+#channelSelect option{
+  font-family: sans-serif;
+  font-size: 16px;
+}
+
+#channelSelect {
+  font-family: sans-serif;
+  font-size: 16px;
+  color: #746d68;
+}

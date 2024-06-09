@@ -7,6 +7,9 @@
     {{template "Searchbar"}}
     <section id="content">
       <h2>Latest Threads</h2>
+      <div class="link-container click-button">
+        <a class="link" href="/create_post" class="create-post-link">Create a New Post</a>
+      </div>
       <ul class="thread-list">
         {{range .Posts}}
         <div>
@@ -19,20 +22,15 @@
               <p>{{.Category}}</p>
               <p>Likes: {{.Likes}} Dislikes: {{.Dislikes}}</p>
           
-          {{if $.IsAuthenticated}}
           <form action="/like_post" method="POST">
             <input type="hidden" name="post_id" value="{{.ID}}">
             <button class="button click-button" type="submit" name="action" value="like">Like</button>
             <button class="button click-button" type="submit" name="action" value="dislike">Dislike</button>
           </form>
-          {{end}}
         </li>
         </div>
         {{end}}
       </ul>
-      <div class="link-container click-button">
-        <a class="link" href="/create_post" class="create-post-link">Create a New Post</a>
-      </div>
     </section>
   </main>
 {{template "Footer"}}

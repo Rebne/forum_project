@@ -6,7 +6,7 @@
 - [x] Like/Vote functionality
 - [x] Thread pages
 - [x] Delete redundant check for user authentication for example handlers.go -> line 706
-
+- [ ] Page not found handling
 
 ### General
 - [x] Only allowed packages are used.
