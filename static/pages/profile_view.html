@@ -5,32 +5,37 @@
 <body>
   {{template "Header"}}
   <main>
-    <section id="content">
-      <h2>{{.Username}}'s Profile</h2>
-      <p>{{.Username}}</p>
+    <aside class="bordered" id="profile">
+      <h2>{{toUpper .Username}}'s Profile</h2>
       <div id="bio-section">
         <h3>Bio</h3>
-        <textarea id="bio" name="bio" rows="4" cols="50" readonly>{{.Bio}}</textarea>
+          <textarea class="filter-form" id="bio" name="bio" rows="4" cols="50">{{.Bio}}</textarea><br>
       </div>
       <div id="posts-section">
-        <h3>Posts by {{.Username}}</h3>
+        <h3 class="profile-heading">Posts by {{.Username}}</h3>
         <ul id="user-posts">
           {{range .CreatedPosts}}
-          <li><a href="/post/{{.ID}}">{{.Title}}</a> - {{formatDate .Date}}</li>
+          <li class="profile-list-item">
+          <div class="link-container click-button">
+            <a class="link" href="/post/{{.ID}}">{{.Title}} - {{formatDate .Date}}</a>
+          </div>
+        </li>
           {{end}}
         </ul>
       </div>
       <div id="liked-section">
-        <h3>Posts Liked by {{.Username}}</h3>
+        <h3 class="profile-heading">Posts Liked by {{.Username}}</h3>
         <ul id="liked-posts">
           {{range .LikedPosts}}
-          <li><a href="/post/{{.ID}}">{{.Title}}</a> - {{formatDate .Date}}</li>
+          <li class="profile-list-item">
+          <div class="link-container click-button">
+            <a class="link" href="/post/{{.ID}}">{{.Title}} - {{formatDate .Date}}</a>
+          </div>
+          </li>
           {{end}}
         </ul>
       </div>
-    </section>
+    </aside>
   </main>
   {{template "Footer"}}
 </body>
-
-</html>

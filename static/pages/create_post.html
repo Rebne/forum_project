@@ -18,8 +18,8 @@
                 <label class="error">{{.}}</label><br>
                 {{end}}
 
-                <select class="input-box create-post-input" id="category" name="category">
-                    <option value="">Select a category</option>
+                <select class="input-box create-post-input" id="post-category" name="category">
+                    <option value="">select a category</option>
                     <option value="Specific Books" {{if eq .Category "Specific Books"}}selected{{end}}>Specific Books</option>
                     <option value="In-depth" {{if eq .Category "In-depth"}}selected{{end}}>In-depth</option>
                     <option value="Character Study" {{if eq .Category "Character Study"}}selected{{end}}>Character Study</option>

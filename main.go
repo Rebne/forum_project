@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"database/sql"
+	"strings"
 
 	// underscore is used when no package's exported identifiers (functions, types, variables) are used in your code.
 	_ "github.com/mattn/go-sqlite3"
@@ -76,6 +77,7 @@ func init() {
 	var err error
 	funcmap := template.FuncMap{
 		"formatDate": formatDate,
+		"toUpper":    strings.ToUpper,
 	}
 	tmpl, err = template.New("all").Funcs(funcmap).ParseGlob("static/**/*.html")
 	if err != nil {
