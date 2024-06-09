@@ -193,15 +193,46 @@ func updateBioHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func searchHandler(w http.ResponseWriter, r *http.Request) {
-
-	// user authentication needs to be checked for the right index page
+	// Check if the user is authenticated
 	_, err := r.Cookie("session_id")
 	isAuthenticated := err == nil
 
 	r.ParseForm()
 
+	// Get search input and category from the form
 	searchInput := r.Form.Get("search")
-	rows, err := db.Query("SELECT * FROM posts WHERE title LIKE '%' || ? || '%' OR content LIKE '%' || ? || '%';", searchInput, searchInput)
+	category := r.Form.Get("category")
+
+	var rows *sql.Rows
+
+	// Construct the query based on whether a category is specified
+	if category == "" {
+		// Search without category filter
+		rows, err = db.Query(`
+			SELECT p.id, p.users_id, p.title, p.content, p.category, p.date,
+			       u.username,
+			       COALESCE(SUM(CASE WHEN pl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
+			       COALESCE(SUM(CASE WHEN pl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
+			FROM posts p
+			JOIN users u ON p.users_id = u.id
+			LEFT JOIN posts_likes pl ON p.id = pl.posts_id
+			WHERE p.title LIKE '%' || ? || '%' OR p.content LIKE '%' || ? || '%'
+			GROUP BY p.id, p.users_id, p.title, p.content, p.category, p.date, u.username;
+		`, searchInput, searchInput)
+	} else {
+		// Search with category filter
+		rows, err = db.Query(`
+			SELECT p.id, p.users_id, p.title, p.content, p.category, p.date,
+			       u.username,
+			       COALESCE(SUM(CASE WHEN pl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
+			       COALESCE(SUM(CASE WHEN pl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
+			FROM posts p
+			JOIN users u ON p.users_id = u.id
+			LEFT JOIN posts_likes pl ON p.id = pl.posts_id
+			WHERE (p.title LIKE '%' || ? || '%' OR p.content LIKE '%' || ? || '%') AND p.category = ?
+			GROUP BY p.id, p.users_id, p.title, p.content, p.category, p.date, u.username;
+		`, searchInput, searchInput, category)
+	}
 
 	if err != nil {
 		serverError(w, err)
@@ -210,18 +241,14 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	defer rows.Close()
 
 	Posts := []Post{}
-	var user_id int
-	var id int
 	for rows.Next() {
 		tmp := Post{}
-		err = rows.Scan(&id, &user_id, &tmp.Title, &tmp.Content, &tmp.Category, &tmp.Date)
+		err = rows.Scan(&tmp.ID, &tmp.User_id, &tmp.Title, &tmp.Content, &tmp.Category, &tmp.Date, &tmp.Username, &tmp.Likes, &tmp.Dislikes)
 		if err != nil {
-			log.Fatal(err)
+			serverError(w, err)
+			return
 		}
-
-		db.QueryRow("SELECT username FROM users WHERE id = ?;", user_id).Scan(&tmp.Username)
 		Posts = append(Posts, tmp)
-
 	}
 
 	if err = rows.Err(); err != nil {
@@ -229,7 +256,9 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	content := PageContent{Posts: Posts}
+	content := PageContent{
+		Posts: Posts,
+	}
 
 	if isAuthenticated {
 		renderTemplate(w, "protected", content, http.StatusOK)

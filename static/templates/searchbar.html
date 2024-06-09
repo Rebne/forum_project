@@ -3,7 +3,18 @@
     <h2>Search</h2>
     <form action="/search">
       <input class="input-box" type="text" name="search" placeholder="Search Forums">
+      <label for="search-category">Category:</label>
+      <select id="search-category" name="category">
+        <option value="">All</option>
+        <option value="Specific Books">Specific Books</option>
+        <option value="In-depth">In-depth</option>
+        <option value="Character Study">Character Study</option>
+        <option value="Interviews">Interviews</option>
+        <option value="Fiction">Fiction</option>
+        <option value="Biography">Biography</option>
+        <option value="Discussion">Discussion</option>
+      </select>
       <button class="button click-button" type="submit">Search</button>
     </form>
-  </aside>
+</aside>
 {{end}}
