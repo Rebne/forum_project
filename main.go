@@ -29,8 +29,10 @@ type Session struct {
 }
 
 type PageContent struct {
-	Posts           []Post
-	IsAuthenticated bool
+	Posts            []Post
+	Categories       []string
+	SelectedCategory string
+	IsAuthenticated  bool
 }
 
 type Post struct {
@@ -112,6 +114,8 @@ func main() {
 	mux.HandleFunc("/comment", authenticate(submitCommentHandler))
 	mux.HandleFunc("/like_comment", authenticate(likeCommentHandler))
 	mux.HandleFunc("/updatebio", authenticate(updateBioHandler))
+	mux.HandleFunc("/categories", categoriesHandler)
+	mux.HandleFunc("/about", aboutHandler)
 
 	http.Handle("/", mux)
 

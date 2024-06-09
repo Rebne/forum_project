@@ -245,8 +245,14 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		isAuthenticated = true
 	}
 
-	// Query to get posts with like and dislike counts
-	rows, err := db.Query(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date,
+	// Get the selected category from the query parameters
+	selectedCategory := r.URL.Query().Get("category")
+
+	// Query to get posts with like and dislike counts, filtered by category if provided
+	var rows *sql.Rows
+	var err error
+	if selectedCategory == "" {
+		rows, err = db.Query(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date,
                            u.username,
                            COALESCE(SUM(CASE WHEN pl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
                            COALESCE(SUM(CASE WHEN pl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
@@ -254,6 +260,17 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
                            JOIN users u ON p.users_id = u.id
                            LEFT JOIN posts_likes pl ON p.id = pl.posts_id
                            GROUP BY p.id, p.users_id, p.title, p.content, p.category, p.date, u.username;`)
+	} else {
+		rows, err = db.Query(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date,
+                           u.username,
+                           COALESCE(SUM(CASE WHEN pl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
+                           COALESCE(SUM(CASE WHEN pl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
+                           FROM posts p
+                           JOIN users u ON p.users_id = u.id
+                           LEFT JOIN posts_likes pl ON p.id = pl.posts_id
+                           WHERE p.category = ?
+                           GROUP BY p.id, p.users_id, p.title, p.content, p.category, p.date, u.username;`, selectedCategory)
+	}
 	if err != nil {
 		serverError(w, err)
 		return
@@ -276,10 +293,32 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Pass authentication status along with posts when rendering the template
+	// Query to get the list of categories
+	categoryRows, err := db.Query("SELECT DISTINCT category FROM posts")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer categoryRows.Close()
+
+	var categories []string
+	for categoryRows.Next() {
+		var category string
+		if err := categoryRows.Scan(&category); err != nil {
+			log.Fatal(err)
+		}
+		categories = append(categories, category)
+	}
+
+	if err = categoryRows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Pass authentication status, posts, categories, and selected category when rendering the template
 	content := PageContent{
-		Posts:           Posts,
-		IsAuthenticated: isAuthenticated,
+		Posts:            Posts,
+		Categories:       categories,
+		SelectedCategory: selectedCategory,
+		IsAuthenticated:  isAuthenticated,
 	}
 
 	if isAuthenticated {
@@ -738,5 +777,45 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/post/"+postID, http.StatusSeeOther)
 	} else {
 		clientError(w, http.StatusMethodNotAllowed)
+	}
+}
+
+func categoriesHandler(w http.ResponseWriter, r *http.Request) {
+	// Query to get the list of categories
+	rows, err := db.Query("SELECT DISTINCT category FROM posts")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer rows.Close()
+
+	var categories []string
+	for rows.Next() {
+		var category string
+		if err := rows.Scan(&category); err != nil {
+			log.Fatal(err)
+		}
+		categories = append(categories, category)
+	}
+
+	if err = rows.Err(); err != nil {
+		log.Fatal(err)
+	}
+
+	// Pass categories to the template
+	err = tmpl.ExecuteTemplate(w, "categories.html", struct{ Categories []string }{Categories: categories})
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+}
+
+func aboutHandler(w http.ResponseWriter, r *http.Request) {
+	// Render the about.html template
+	err := tmpl.ExecuteTemplate(w, "about.html", nil)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
 	}
 }

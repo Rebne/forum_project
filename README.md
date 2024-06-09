@@ -1,7 +1,7 @@
 ## TODO
 
 - [ ] Category filtering (connected with search)
-- [ ] Complete profile page
+- [x] Complete profile page
 - [x] Comment functionality
 - [x] Like/Vote functionality
 - [x] Thread pages
@@ -16,7 +16,7 @@
 - [x] Sessions implemented for user persistence. (Cookies)
 - [x] Multiple browser sessions function correctly.
 - [x] Empty posts and comments not allowed.
-- [ ] Posts can be filtered by category.
+- [x] Posts can be filtered by category.
 - [x] Number of likes and dislikes for comments visible to all users.
 - [x] Number of likes and dislikes displayed and updated correctly.
 - [x] Posts cannot be liked and disliked simultaneously.
@@ -64,9 +64,9 @@
 - [x] Informative and user-friendly error messages. [Extra]
 
 ### Docker Integration
-- [ ] Docker image can be built successfully using Dockerfile.
-- [ ] Container runs successfully using created image.
-- [ ] Project has no unused Docker objects.
+- [x] Docker image can be built successfully using Dockerfile.
+- [x] Container runs successfully using created image.
+- [x] Project has no unused Docker objects.
 
 <img src="ERD.png" width="80%" height="80%">
 

@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+{{template "Head"}}
+<body>
+{{template "Header"}}
+  <main>
+    <section id="content">
+      <h2>Categories</h2>
+      <ul class="category-list">
+        {{range .Categories}}
+        <li class="category-item">
+          <a href="/?category={{.}}">{{.}}</a>
+        </li>
+        {{end}}
+      </ul>
+    </section>
+  </main>
+  <footer>
+    <p>&copy; Literary Lions 2024</p>
+  </footer>
+</body>
+</html>
