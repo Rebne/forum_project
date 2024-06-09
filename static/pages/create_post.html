@@ -20,15 +20,8 @@
                 <label class="error">{{.}}</label><br>
                 {{end}}
 
-                <select class="input-box create-post-input" id="channelSelect" name="category" id="category">
-                    <option value="specific_books">Specific books</option>
-                    <option value="in-depth">In-depth</option>
-                    <option value="character_study">Character study</option>
-                    <option value="interviews">Interviews</option>
-                    <option value="fiction">Fiction</option>
-                    <option value="biography">Biography</option>
-                    <option value="discussion" selected>Discussion</option>
-                </select>
+                <input class="input-box create-post-input" placeholder="category" type="text" id="category"
+                    name="category" value="{{.Category}}"><br>
                 {{with .FieldErrors.category}}
                 <label class="error">{{.}}</label><br>
                 {{end}}
@@ -39,5 +32,4 @@
     </main>
     {{template "Footer"}}
 </body>
-
 </html>

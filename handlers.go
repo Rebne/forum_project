@@ -201,16 +201,7 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 	r.ParseForm()
 
 	searchInput := r.Form.Get("search")
-	category := r.Form.Get("channels")
-	var rows *sql.Rows
-
-	// If category was selected filter by category
-	if category == "All" {
-		rows, err = db.Query(`SELECT * FROM posts WHERE title LIKE '%' || ? || '%' OR content LIKE '%' || ? || '%';`, searchInput, searchInput)
-	} else {
-		rows, err = db.Query(`SELECT * FROM posts WHERE title LIKE '%' || ? || '%' OR content LIKE '%' || ? || '%' 
-		AND category = ?;`, searchInput, searchInput, category)
-	}
+	rows, err := db.Query("SELECT * FROM posts WHERE title LIKE '%' || ? || '%' OR content LIKE '%' || ? || '%';", searchInput, searchInput)
 
 	if err != nil {
 		serverError(w, err)
@@ -287,7 +278,8 @@ func indexHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Pass authentication status along with posts when rendering the template
 	content := PageContent{
-		Posts: Posts,
+		Posts:           Posts,
+		IsAuthenticated: isAuthenticated,
 	}
 
 	if isAuthenticated {
