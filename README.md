@@ -16,7 +16,7 @@
 - [x] Sessions implemented for user persistence. (Cookies)
 - [x] Multiple browser sessions function correctly.
 - [x] Empty posts and comments not allowed.
-- [ ] Posts can be filtered by category.
+- [x] Posts can be filtered by category.
 - [x] Number of likes and dislikes for comments visible to all users.
 - [x] Number of likes and dislikes displayed and updated correctly.
 - [x] Posts cannot be liked and disliked simultaneously.

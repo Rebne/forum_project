@@ -809,3 +809,13 @@ func categoriesHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func aboutHandler(w http.ResponseWriter, r *http.Request) {
+	// Render the about.html template
+	err := tmpl.ExecuteTemplate(w, "about.html", nil)
+	if err != nil {
+		log.Println(err)
+		http.Error(w, "internal server error", http.StatusInternalServerError)
+		return
+	}
+}
