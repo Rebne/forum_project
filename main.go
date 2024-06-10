@@ -184,25 +184,33 @@ func checkForValidInput(w http.ResponseWriter, username, password, email string)
 		errors["password"] = "Password field required"
 	}
 
-	stmtForCheck, err := db.Prepare("SELECT username FROM users WHERE username = ?;")
+	stmtForUser, err := db.Prepare("SELECT username FROM users WHERE username = ?;")
 	if err != nil {
 		serverError(w, err)
 		return nil
 	}
-	defer stmtForCheck.Close()
+	defer stmtForUser.Close()
 
 	var userExists string
 	var emailExists string
-	err = stmtForCheck.QueryRow(username).Scan(&userExists)
+	err = stmtForUser.QueryRow(username).Scan(&userExists)
 	if err != nil && err != sql.ErrNoRows {
 		serverError(w, err)
 		return nil
 	}
-	err = stmtForCheck.QueryRow(password).Scan(&emailExists)
+	stmtForEmail, err := db.Prepare("SELECT email FROM users WHERE email = ?;")
+	if err != nil {
+		serverError(w, err)
+		return nil
+	}
+
+	err = stmtForEmail.QueryRow(email).Scan(&emailExists)
 	if err != nil && err != sql.ErrNoRows {
 		serverError(w, err)
 		return nil
 	}
+
+	defer stmtForEmail.Close()
 
 	if userExists != "" {
 		errors["username"] = "Username is already taken"
