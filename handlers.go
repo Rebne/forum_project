@@ -269,6 +269,10 @@ func searchHandler(w http.ResponseWriter, r *http.Request) {
 
 func indexHandler(w http.ResponseWriter, r *http.Request) {
 	// Check if the user is authenticated
+	if r.URL.Path != "/" {
+		notFound(w)
+		return
+	}
 	isAuthenticated := false
 	if _, err := r.Cookie("session_id"); err == nil {
 		isAuthenticated = true

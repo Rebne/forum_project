@@ -19,5 +19,5 @@ func clientError(w http.ResponseWriter, status int) {
 }
 
 func notFound(w http.ResponseWriter) {
-	clientError(w, http.StatusNotFound)
+	http.Error(w, "404 page not found", http.StatusNotFound)
 }
