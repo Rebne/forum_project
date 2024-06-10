@@ -38,17 +38,19 @@ After you have cloned the repository and have installed docker, you can build th
 
 ```docker build -t literary-lions .``` or if you do not have root access ```sudo docker build -t literary-lions .```
 
-After building the image, you can run it with
+When you run the container, you need to map the container's port to a port on the host machine using the '-p' flag. This maps a port on your host to a port on the container, for example:
+
 
 ```docker run -p 5000:5000 literary-lions``` or if you do not have root access ```sudo docker run -p 5000:5000 literary-lions```
 
-If you do not have root privileges within docker you might need to run the commands with sudo. 
+**Hint** If you want to use a different port to :5000 that we have set within our main.go file, you can do so by using
 
-For example:
-instead of
-```docker build -t literary-lions .```
-you would run
-```sudo docker build -t literary-lions .```
+```docker run -p xxxx:5000 literary-lions``` 
+
+
+i.e. ```docker run -p 3000:5000 literary-lions``` would start the application on port 3000 instead of 5000
+
+If you do not have root privileges within docker you might need to run the commands with sudo. 
 
 If you wish to be able to run the docker commands without sudo, you will need to add yourself to the docker user group.
 Follow [these steps](https://docs.docker.com/engine/install/linux-postinstall/) in order to create the group and add yourself to it.
