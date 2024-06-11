@@ -2,7 +2,11 @@
 <html lang="en">
 {{template "Head"}}
 <body>
+  {{if $.IsAuthenticated}}
 {{template "Header"}}
+ {{else}}
+{{template "HeaderSignedOut"}}
+{{end}}
   <main>
     {{template "Searchbar"}}
     <section id="content">

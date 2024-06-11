@@ -77,17 +77,22 @@ func profileHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func profileViewHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if the user is authenticated based on the presence of the session_id cookie
+	_, err := r.Cookie("session_id")
+	isAuthenticated := err == nil
 
+	// Extract the username from the URL path
 	path := strings.TrimPrefix(r.URL.Path, "/profile/")
 	if path == "" {
 		notFound(w)
 		return
 	}
-
 	username := path
 
+	// Query the database to get the user's ID and bio
 	var userID int
-	err := db.QueryRow("SELECT id FROM users WHERE username = ?", username).Scan(&userID)
+	var bio string
+	err = db.QueryRow("SELECT id, bio FROM users WHERE username = ?", username).Scan(&userID, &bio)
 	if err == sql.ErrNoRows {
 		notFound(w)
 		return
@@ -96,13 +101,7 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var bio string
-	err = db.QueryRow("SELECT bio FROM users WHERE id = ?", userID).Scan(&bio)
-	if err != nil && err != sql.ErrNoRows {
-		serverError(w, err)
-		return
-	}
-
+	// Query the database to get posts created by the user
 	rows, err := db.Query("SELECT id, users_id, title, content, category, date FROM posts WHERE users_id = ?", userID)
 	if err != nil {
 		serverError(w, err)
@@ -121,6 +120,7 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 		createdPosts = append(createdPosts, post)
 	}
 
+	// Query the database to get posts liked by the user
 	likedRows, err := db.Query(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date
                                 FROM posts p
                                 JOIN posts_likes pl ON p.id = pl.posts_id
@@ -142,12 +142,16 @@ func profileViewHandler(w http.ResponseWriter, r *http.Request) {
 		likedPosts = append(likedPosts, post)
 	}
 
+	// Prepare data to be passed to the template
 	profileData := ProfileData{
-		Username:     username,
-		Bio:          bio,
-		CreatedPosts: createdPosts,
-		LikedPosts:   likedPosts,
+		Username:        username,
+		Bio:             bio,
+		CreatedPosts:    createdPosts,
+		LikedPosts:      likedPosts,
+		IsAuthenticated: isAuthenticated,
 	}
+
+	// Render the template with the data
 	renderTemplate(w, "profile_view", profileData, http.StatusOK)
 }
 
@@ -682,16 +686,21 @@ func likePostHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func viewPostHandler(w http.ResponseWriter, r *http.Request) {
+	// Check if the user is authenticated based on the presence of the session_id cookie
+	_, err := r.Cookie("session_id")
+	isAuthenticated := err == nil
+
+	// Retrieve post ID from URL
 	path := strings.TrimPrefix(r.URL.Path, "/post/")
 	if path == "" {
 		notFound(w)
 		return
 	}
-
 	postID := path
 
+	// Query the database to fetch the post details
 	var post Post
-	err := db.QueryRow(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date, u.username,
+	err = db.QueryRow(`SELECT p.id, p.users_id, p.title, p.content, p.category, p.date, u.username,
                         COALESCE(SUM(CASE WHEN pl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
                         COALESCE(SUM(CASE WHEN pl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
                         FROM posts p
@@ -708,8 +717,9 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Function to fetch comments for the post from the database
 	fetchCommentsForPost := func(postID string) ([]Comment, error) {
-		var comments []Comment
+		// Query to fetch comments for the post
 		rows, err := db.Query(`SELECT c.id, c.posts_id, c.content, c.date, c.users_id, u.username,
                                COALESCE(SUM(CASE WHEN cl.is_dislike = 0 THEN 1 ELSE 0 END), 0) as likes,
                                COALESCE(SUM(CASE WHEN cl.is_dislike = 1 THEN 1 ELSE 0 END), 0) as dislikes
@@ -723,6 +733,7 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 		}
 		defer rows.Close()
 
+		var comments []Comment
 		for rows.Next() {
 			var comment Comment
 			if err := rows.Scan(&comment.ID, &comment.PostID, &comment.Content, &comment.Date, &comment.UserID, &comment.Username, &comment.Likes, &comment.Dislikes); err != nil {
@@ -737,20 +748,25 @@ func viewPostHandler(w http.ResponseWriter, r *http.Request) {
 		return comments, nil
 	}
 
+	// Fetch comments for the post
 	comments, err := fetchCommentsForPost(postID)
 	if err != nil {
 		serverError(w, err)
 		return
 	}
 
+	// Prepare data to be passed to the template
 	data := struct {
-		Post     Post
-		Comments []Comment
+		Post            Post
+		Comments        []Comment
+		IsAuthenticated bool
 	}{
-		Post:     post,
-		Comments: comments,
+		Post:            post,
+		Comments:        comments,
+		IsAuthenticated: isAuthenticated,
 	}
 
+	// Render the template with the data
 	renderTemplate(w, "post", data, http.StatusOK)
 }
 
@@ -839,6 +855,10 @@ func likeCommentHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func categoriesHandler(w http.ResponseWriter, r *http.Request) {
+
+	_, err := r.Cookie("session_id")
+	isAuthenticated := err == nil
+
 	// Hard-coded categories
 	hardcodedCategories := []string{
 		"Specific Books",
@@ -884,18 +904,21 @@ func categoriesHandler(w http.ResponseWriter, r *http.Request) {
 		mergedCategories = append(mergedCategories, category)
 	}
 
-	// Pass categories to the template
-	err = tmpl.ExecuteTemplate(w, "categories.html", struct{ Categories []string }{Categories: mergedCategories})
-	if err != nil {
-		log.Println(err)
-		http.Error(w, "internal server error", http.StatusInternalServerError)
-		return
-	}
+	err = tmpl.ExecuteTemplate(w, "categories.html", struct {
+		Categories      []string
+		IsAuthenticated bool
+	}{Categories: mergedCategories, IsAuthenticated: isAuthenticated})
 }
 
 func aboutHandler(w http.ResponseWriter, r *http.Request) {
-	// Render the about.html template
-	err := tmpl.ExecuteTemplate(w, "about.html", nil)
+	_, err := r.Cookie("session_id")
+	isAuthenticated := err == nil
+
+	type TemplateData struct {
+		IsAuthenticated bool
+	}
+
+	err = tmpl.ExecuteTemplate(w, "about.html", TemplateData{IsAuthenticated: isAuthenticated})
 	if err != nil {
 		log.Println(err)
 		http.Error(w, "internal server error", http.StatusInternalServerError)

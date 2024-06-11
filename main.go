@@ -61,10 +61,11 @@ type Comment struct {
 }
 
 type ProfileData struct {
-	Username     string
-	Bio          string
-	CreatedPosts []Post
-	LikedPosts   []Post
+	Username        string
+	Bio             string
+	CreatedPosts    []Post
+	LikedPosts      []Post
+	IsAuthenticated bool
 }
 
 var sessions map[string]Session

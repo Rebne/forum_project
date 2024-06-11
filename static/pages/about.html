@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
 {{template "Head"}}
+
 <body>
+  {{if $.IsAuthenticated}}
 {{template "Header"}}
+ {{else}}
+{{template "HeaderSignedOut"}}
+{{end}}
   <main>
     <section id="about">
       <h2>About Us</h2>

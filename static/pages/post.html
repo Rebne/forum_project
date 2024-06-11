@@ -6,7 +6,11 @@
     <link rel="stylesheet" href="../../css/styles.css">
 </head>
 <body>
+  {{if $.IsAuthenticated}}
   {{template "Header"}}
+   {{else}}
+  {{template "HeaderSignedOut"}}
+  {{end}}
   <main>
     <section id="content">
       <h2>{{.Post.Title}}</h2>

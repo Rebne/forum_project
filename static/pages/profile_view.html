@@ -3,13 +3,17 @@
 {{template "Head"}}
 
 <body>
+  {{if $.IsAuthenticated}}
   {{template "Header"}}
+   {{else}}
+  {{template "HeaderSignedOut"}}
+  {{end}}
   <main>
     <aside class="bordered" id="profile">
       <h2>{{toUpper .Username}}'s Profile</h2>
       <div id="bio-section">
         <h3>Bio</h3>
-          <textarea class="filter-form" id="bio" name="bio" rows="4" cols="50">{{.Bio}}</textarea><br>
+          <textarea class="filter-form" id="bio" name="bio" rows="4" cols="50" readonly>{{.Bio}}</textarea><br>
       </div>
       <div id="posts-section">
         <h3 class="profile-heading">Posts by {{.Username}}</h3>

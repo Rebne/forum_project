@@ -3,7 +3,11 @@
 {{template "Head"}}
 
 <body>
-  {{template "Header"}}
+  {{if $.IsAuthenticated}}
+{{template "Header"}}
+ {{else}}
+{{template "HeaderSignedOut"}}
+{{end}}
   <main>
     <aside class="bordered" id="content">
       <h2>Categories</h2>
